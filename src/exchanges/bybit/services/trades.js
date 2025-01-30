@@ -3,7 +3,40 @@ import axios from "axios";
 import { configDetails, generateHeaders, generateSignature } from "./common.js";
 import { commonUtils } from "../../../utils/index.js";
 
-export const placeOrder = async ({
+export const processOrder = async (alertMessage) => {
+    try {
+        const data = JSON.parse(alertMessage);
+
+        // Map the TradingView alert data to your placeOrder parameters
+        const request = {
+            category: data.inverse === "1" ? "inverse" : "linear",
+            symbol: data.coin_pair,
+            side: data.action.toUpperCase(),
+            orderType: "Market", // You can modify this based on your needs
+            qty: data.qty,
+            // Add other parameters as needed
+            takeProfit: null, // You can calculate this based on your strategy
+            stopLoss: null, // You can calculate this based on your strategy
+        };
+
+        // Place the order
+        const result = await placeOrder({
+            ...request,
+            isLeverage: 1, // Set according to your needs
+            timeInForce: "GTC",
+            positionIdx: 0, // One-way position
+            sandbox: true, // Set to false for live trading
+        });
+
+        console.log("Order placed successfully:", result);
+        return result;
+    } catch (err) {
+        console.error(err?.response?.data || err.message);
+        throw new Error(err.message);
+    }
+};
+
+const placeOrder = async ({
     // Required parameters
     category = "linear", // Product type (linear, inverse, spot, option)
     symbol, // Trading pair, e.g., "BTCUSDT"
