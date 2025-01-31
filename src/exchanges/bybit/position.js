@@ -1,20 +1,30 @@
+import axios from "axios";
+import { commonUtils } from "../../utils/index.js";
 import { configDetails, generateSignature, generateHeaders } from "./common.js";
 
-export const getPositions = async ({ data, sandbox = true }) => {
+export const getPositions = async ({ category = "linear", symbol, limit, cursor, sandbox = true }) => {
     try {
-        const { baseUrl } = configDetails(sandbox);
-        const url = `${baseUrl}/v5/position/list`;
+        const { baseUrl, apiKey, apiSecret } = configDetails(sandbox);
 
-        const signature = generateSignature({ data, timeStamp, sandbox });
-        const headers = generateHeaders({ sandbox, signature, timeStamp });
+        const method = "GET";
+        const timestamp = Date.now();
+        const url = `${baseUrl}/v5/position/list`;
 
         const params = { category };
 
         if (limit) params.limit = limit;
         if (symbol) params.symbol = symbol;
         if (cursor) params.cursor = cursor;
-        if (baseCoin) params.baseCoin = baseCoin;
-        if (settleCoin) params.settleCoin = settleCoin;
+
+        const signature = generateSignature({
+            data: params,
+            timestamp,
+            apiSecret,
+            apiKey,
+            sandbox,
+            method,
+        });
+        const headers = generateHeaders({ sandbox, signature, timestamp, apiKey });
 
         const options = {
             method: "GET",
@@ -36,14 +46,39 @@ export const getPositions = async ({ data, sandbox = true }) => {
         throw new Error(err.message);
     }
 };
+// getPositions({ symbol: "SOLUSDT", sandbox: true }).then((res) => console.log(res.data));
 
-const setTrailingStop = async ({
+export const getPosition = async ({ symbol, side, size, sandbox = true }) => {
+    try {
+        const positionsRef = await getPositions({ symbol, sandbox });
+        const positions = positionsRef.data.list;
+        const position = positions.find((position) => {
+            if (side) return position.side === side;
+            if (size) return position.size === size;
+
+            return position;
+        });
+
+        const success = position ? true : false;
+
+        return {
+            success,
+            data: position,
+        };
+    } catch (err) {
+        console.error(err?.response?.data || err.message);
+        throw new Error(err.message);
+    }
+};
+// getPosition({ symbol: "SOLUSDT", side: "Buy", sandbox: true }).then((res) => console.log(res));
+// getPosition({ symbol: "SOLUSDT", side: "Sell", sandbox: true }).then((res) => console.log(res));
+
+export const setTrailingStop = async ({
     category = "linear",
     symbol,
     trailingStop, // Price distance for trailing stop
-    activePrice, // Trigger price for trailing stop
     tpslMode = "Full", // Using full position mode
-    positionIdx = 0,
+    positionIdx = 0, // signifies if making a one-way (0) or hedge position (1, 2)
     sandbox = true,
 }) => {
     try {
@@ -56,7 +91,6 @@ const setTrailingStop = async ({
             category,
             symbol,
             trailingStop: trailingStop.toString(),
-            activePrice: activePrice.toString(),
             tpslMode,
             positionIdx,
         };
@@ -92,3 +126,12 @@ const setTrailingStop = async ({
         throw err;
     }
 };
+
+// setTrailingStop({
+//     category: "linear",
+//     symbol: "SOLUSDT",
+//     trailingStop: 50,
+//     tpslMode: "Full",
+//     positionIdx: 0,
+//     sandbox: true,
+// });

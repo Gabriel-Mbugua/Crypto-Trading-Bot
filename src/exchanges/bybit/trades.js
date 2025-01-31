@@ -1,42 +1,9 @@
 import axios from "axios";
 
 import { configDetails, generateHeaders, generateSignature } from "./common.js";
-import { commonUtils } from "../../../utils/index.js";
+import { commonUtils } from "../../utils/index.js";
 
-export const processOrder = async (alertMessage) => {
-    try {
-        const data = JSON.parse(alertMessage);
-
-        // Map the TradingView alert data to your placeOrder parameters
-        const request = {
-            category: data.inverse === "1" ? "inverse" : "linear",
-            symbol: data.coin_pair,
-            side: data.action.toUpperCase(),
-            orderType: "Market", // You can modify this based on your needs
-            qty: data.qty,
-            // Add other parameters as needed
-            takeProfit: null, // You can calculate this based on your strategy
-            stopLoss: null, // You can calculate this based on your strategy
-        };
-
-        // Place the order
-        const result = await placeOrder({
-            ...request,
-            isLeverage: 1, // Set according to your needs
-            timeInForce: "GTC",
-            positionIdx: 0, // One-way position
-            sandbox: true, // Set to false for live trading
-        });
-
-        console.log("Order placed successfully:", result);
-        return result;
-    } catch (err) {
-        console.error(err?.response?.data || err.message);
-        throw new Error(err.message);
-    }
-};
-
-const placeOrder = async ({
+export const placeTrade = async ({
     // Required parameters
     category = "linear", // Product type (linear, inverse, spot, option)
     symbol, // Trading pair, e.g., "BTCUSDT"
@@ -46,10 +13,11 @@ const placeOrder = async ({
 
     // Optional parameters with common defaults
     isLeverage = 0, // For spot trading: 0=spot, 1=margin
-    price, // Required for Limit orders
     timeInForce = "GTC", // Default to Good Till Cancel
     positionIdx = 0, // 0=one-way, 1=hedge-buy, 2=hedge-sell
     orderLinkId = undefined, // Custom order ID
+
+    marketUnit, // quoteCoin or baseCoin e.g BTCUSDT (BTC = baseCoin, USDT = quoteCoin) only for spot trading
 
     // Take profit / Stop loss parameters
     takeProfit, // Take profit price
@@ -83,21 +51,8 @@ const placeOrder = async ({
             orderType,
             qty: qty.toString(),
             isLeverage: isLeverage ? 1 : 0,
-            price: price?.toString(),
             timeInForce,
             positionIdx,
-            orderLinkId,
-            takeProfit: takeProfit?.toString(),
-            stopLoss: stopLoss?.toString(),
-            tpTriggerBy,
-            slTriggerBy,
-            tpslMode,
-            tpLimitPrice: tpLimitPrice?.toString(),
-            slLimitPrice: slLimitPrice?.toString(),
-            tpOrderType,
-            slOrderType,
-            reduceOnly,
-            closeOnTrigger,
         };
 
         console.log("Request Parameters:", JSON.stringify(orderParams, null, 2));
@@ -155,8 +110,6 @@ const enterShort = {
     side: "Sell",
     orderType: "Market",
     qty: "0.1",
-    positionIdx: 0,
-    timeInForce: "IOC",
 };
 
 const enterLong = {
@@ -165,8 +118,6 @@ const enterLong = {
     side: "Buy",
     orderType: "Market",
     qty: "0.1",
-    positionIdx: 0,
-    timeInForce: "IOC",
 };
 
 const closeLongPosition = {
@@ -175,8 +126,6 @@ const closeLongPosition = {
     side: "Sell",
     orderType: "Market",
     qty: "0.1",
-    positionIdx: 0,
-    timeInForce: "IOC",
     reduceOnly: true,
 };
 
@@ -186,8 +135,6 @@ const closeShortPosition = {
     side: "Buy",
     orderType: "Market",
     qty: "0.1",
-    positionIdx: 0,
-    timeInForce: "IOC",
     reduceOnly: true,
 };
 // placeOrder(enterLong).then((res) => console.log(res));
@@ -230,7 +177,7 @@ export const cancelOrder = async ({ data, sandbox = true }) => {
     }
 };
 
-export const getOpenClosedOrders = async ({ category = "linear", openOnly, symbol, sandbox = true }) => {
+export const getOpenClosedOrders = async ({ category = "linear", openOnly, baseCoin, symbol, sandbox = true }) => {
     try {
         const { baseUrl, apiKey, apiSecret } = configDetails(sandbox);
 
@@ -242,6 +189,7 @@ export const getOpenClosedOrders = async ({ category = "linear", openOnly, symbo
 
         if (symbol) params.symbol = symbol;
         if (openOnly) params.openOnly = openOnly;
+        if (baseCoin) params.baseCoin = baseCoin;
 
         const cleanOrderParams = commonUtils.cleanAndSortData(params);
 

@@ -1,7 +1,7 @@
 export const createControllerWrapper = (serviceFn, errorCode) => async (req, res, next) => {
     try {
         const input = { ...req.body, ...req.query, ...req.params };
-        console.log(`L-BYBIT-${errorCode}`, JSON.stringify(input));
+        console.log(`L-API-${errorCode}`, JSON.stringify(input));
 
         res.locals.responseBody = await serviceFn(input);
 
@@ -14,7 +14,7 @@ export const createControllerWrapper = (serviceFn, errorCode) => async (req, res
             res.status(200).json(res.locals.responseBody);
         }
     } catch (err) {
-        if (!err?.errorCode) err.errorCode = `E-BYBIT-${errorCode}`;
+        if (!err?.errorCode) err.errorCode = `E-API-${errorCode}`;
         next(err);
     }
 };

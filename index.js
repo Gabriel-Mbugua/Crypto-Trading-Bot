@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 
-import bybitRouter from "./src/exchanges/bybit/routes/index.js";
+import apiRouter from "./src/api/routes/index.js";
 
 const app = express();
 
@@ -16,7 +16,7 @@ app.use(express.json({ limit: "1mb" }));
 
 app.use(helmet());
 
-app.use("/bybit", bybitRouter);
+app.use("/api", apiRouter);
 
 app.get("/", (req, res) => {
     res.json({ message: "Hello World" });

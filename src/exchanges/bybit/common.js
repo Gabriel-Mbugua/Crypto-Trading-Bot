@@ -1,8 +1,8 @@
 import crypto from "crypto";
 import queryString from "node:querystring";
 
-import { config } from "../../../config.js";
-import { commonUtils } from "../../../utils/index.js";
+import { config } from "../../config.js";
+import { commonUtils } from "../../utils/index.js";
 
 const receiveWindow = 10_000;
 

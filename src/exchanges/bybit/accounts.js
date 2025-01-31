@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import { configDetails, generateHeaders, generateSignature } from "./common.js";
-import { commonUtils } from "../../../utils/index.js";
+import { commonUtils } from "../../utils/index.js";
 
 export const getBalance = async (sandbox = true) => {
     try {
