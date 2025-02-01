@@ -53,6 +53,7 @@ export const placeTrade = async ({
             isLeverage: isLeverage ? 1 : 0,
             timeInForce,
             positionIdx,
+            reduceOnly,
         };
 
         console.log("Request Parameters:", JSON.stringify(orderParams, null, 2));
@@ -142,13 +143,13 @@ const closeShortPosition = {
 // placeOrder(closeLongPosition).then((res) => console.log(res));
 // placeOrder(closeShortPosition).then((res) => console.log(res));
 
-export const cancelOrder = async ({ data, sandbox = true }) => {
+export const cancelOrder = async ({ category = "linear", symbol, orderId, sandbox = true }) => {
     try {
-        const { baseUrl } = configDetails(sandbox);
+        const { baseUrl, apiKey, apiSecret } = configDetails(sandbox);
         const url = `${baseUrl}/v5/order/cancel`;
+        const method = "POST";
 
-        const signature = generateSignature({ data, timeStamp, sandbox });
-        const headers = generateHeaders({ sandbox, signature, timeStamp });
+        const timestamp = Date.now();
 
         const params = {
             category,
@@ -156,11 +157,21 @@ export const cancelOrder = async ({ data, sandbox = true }) => {
             orderId,
         };
 
+        const signature = generateSignature({
+            data: params,
+            timestamp,
+            apiSecret,
+            apiKey,
+            sandbox,
+            method,
+        });
+        const headers = generateHeaders({ sandbox, signature, timestamp, apiKey });
+
         const options = {
-            method: "POST",
+            method,
             headers,
             url,
-            params,
+            data: params,
         };
 
         const response = await axios(options);
@@ -176,6 +187,11 @@ export const cancelOrder = async ({ data, sandbox = true }) => {
         throw new Error(err.message);
     }
 };
+// cancelOrder({
+//     orderId: "c1da1ae1-79c5-4a0d-8b8a-7527948cfda2",
+//     symbol: "SOLUSDT",
+//     sandbox: true,
+// }).then((res) => console.log(res));
 
 export const getOpenClosedOrders = async ({ category = "linear", openOnly, baseCoin, symbol, sandbox = true }) => {
     try {
@@ -223,3 +239,70 @@ export const getOpenClosedOrders = async ({ category = "linear", openOnly, baseC
         throw new Error(err.message);
     }
 };
+// getOpenClosedOrders({ symbol: "SOLUSDT" }).then((res) => console.log(JSON.stringify(res)));
+
+export const getOrder = async ({ orderId, symbol, side, sandbox = true }) => {
+    try {
+        if (!orderId && (!symbol || !side)) throw new Error("Order ID or symbol and side are required");
+
+        const ordersRef = await getOpenClosedOrders({ symbol, side, sandbox });
+
+        if (!ordersRef.success) return null;
+
+        const orders = ordersRef.data.list;
+
+        let order;
+
+        if (orderId) order = orders.find((order) => order.orderId === orderId);
+
+        if (!order) order = orders.find((order) => order.symbol === symbol && order.side === side);
+
+        return order;
+    } catch (err) {
+        console.error(err?.response?.data || err.message);
+        throw new Error(err.message);
+    }
+};
+// getOrder({ symbol: "SOLUSDT", side: "Buy" }).then((res) => console.log(res));
+
+export const cancelAllOrders = async ({ category = "linear", symbol, sandbox = true }) => {
+    try {
+        const { baseUrl, apiKey, apiSecret } = configDetails(sandbox);
+        const url = `${baseUrl}/v5/order/cancel-all`;
+        const method = "POST";
+
+        const timestamp = Date.now();
+
+        const params = {
+            category,
+            symbol,
+        };
+
+        const signature = generateSignature({
+            data: params,
+            timestamp,
+            apiSecret,
+            apiKey,
+            sandbox,
+            method,
+        });
+        const headers = generateHeaders({ sandbox, signature, timestamp, apiKey });
+
+        const options = {
+            method,
+            headers,
+            url,
+            data: params,
+        };
+
+        const response = await axios(options);
+
+        if (response.data.retCode !== 0) throw new Error(response.data.retMsg);
+
+        return response.data;
+    } catch (err) {
+        console.error(err?.response?.data || err.message);
+        throw new Error(err.message);
+    }
+};
+// cancelAllOrders({ symbol: "SOLUSDT", sandbox: true }).then((res) => console.log(res));

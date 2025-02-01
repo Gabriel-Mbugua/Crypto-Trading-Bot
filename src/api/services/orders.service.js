@@ -1,13 +1,54 @@
 import { bybitTradesServices, bybitPositionServices, bybitWebsocketServices } from "../../exchanges/bybit/index.js";
 import { commonUtils } from "../../utils/index.js";
 
-export const processOrder = async (alertMessage) => {
+export const processOrder = async (data) => {
     try {
-        console.log("L-ORDERS-5", alertMessage);
-        const data = JSON.parse(alertMessage);
+        console.log("L-ORDERS-5", JSON.stringify(data));
+
+        const sandbox = data.sandbox === "true";
+
+        const positionsRef = await bybitPositionServices.getPositions({
+            symbol: data.symbol,
+            sandbox,
+        });
+
+        const positions = positionsRef.data.list;
+
+        const sameSidePosition = positions.find(
+            (position) =>
+                position.side === data.side && Number(position.size) > 0 && ["Buy", "Sell"].includes(position.side)
+        );
+        const oppositeSidePosition = positions.find(
+            (position) =>
+                position.side !== data.side && Number(position.size) > 0 && ["Buy", "Sell"].includes(position.side)
+        );
+
+        if (sameSidePosition) {
+            console.log("An active position already exists in the same direction. Ignoring the new order.");
+            return { success: false, message: "Active position in the same direction" };
+        }
+
+        // Check if there's an active position in the opposite direction
+        // if so, close it before placing the new order
+        if (oppositeSidePosition) {
+            console.log(
+                "An active position exists in the opposite direction. Closing it before placing the new order."
+            );
+
+            const closingSide = oppositeSidePosition.side === "Sell" ? "Buy" : "Sell";
+
+            const closePositionResult = await bybitPositionServices.closePosition({
+                category: data.category,
+                symbol: data.symbol,
+                side: closingSide,
+                sandbox,
+            });
+
+            console.log("Position closed successfully:", closePositionResult);
+        }
 
         // Initialize WebSocket
-        await bybitWebsocketServices.initializeWebsocket(true);
+        await bybitWebsocketServices.initializeWebsocket(sandbox);
 
         // Wait for WebSocket to be ready
         await bybitWebsocketServices.waitForWebsocketReady();
@@ -19,7 +60,7 @@ export const processOrder = async (alertMessage) => {
             side: data.side,
             orderType: data.orderType,
             qty: data.qty,
-            sandbox: true,
+            sandbox,
         });
         console.log("Order placed successfully:", result);
 
@@ -29,33 +70,7 @@ export const processOrder = async (alertMessage) => {
         throw new Error(err.message);
     }
 };
-
-const waitForPositionOpen = async ({ symbol, side, maxRetries = 10, delay = 1000 }) => {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            // Fetch the current position
-            const position = await bybitPositionServices.getPosition({
-                symbol,
-                side,
-                sandbox: true,
-            });
-
-            // Check if the position is open
-            if (position.success && position.data.size > 0) {
-                console.log("Position opened successfully.");
-                return true;
-            }
-        } catch (err) {
-            console.error("Error fetching position:", err);
-        }
-
-        // Wait before retrying
-        await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-
-    console.error("Position did not open after maximum retries.");
-    return false;
-};
+// processOrder({ category: "linear", symbol: "SOLUSDT", side: "sell", orderType: "Market", qty: "0.106" });
 
 export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
     try {
@@ -68,10 +83,11 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
     }
 };
 
-// processOrder(`{
-//     "category": "linear",
-//     "symbol": "SOLUSDT",
-//     "side": "Buy",
-//     "orderType": "Market",
-//     "qty": "0.1"
-// }`);
+// processOrder({
+//     category: "linear",
+//     symbol: "SOLUSDT",
+//     side: "Sell",
+//     orderType: "Market",
+//     qty: "0.1",
+//     sandbox: "true",
+// });

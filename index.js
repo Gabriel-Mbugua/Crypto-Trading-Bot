@@ -19,14 +19,6 @@ app.use(express.json({ limit: "1mb" }));
 
 app.use(helmet());
 
-// ordersService.processOrder(`{
-//     "category": "linear",
-//     "symbol": "SOLUSDT",
-//     "side": "Buy",
-//     "orderType": "Market",
-//     "qty": "0.1"
-// }`);
-
 app.use("/api", apiRouter);
 
 app.get("/", (req, res) => {

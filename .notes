@@ -1,0 +1,13 @@
+Key Points to Remember
+
+1. Same-Direction Orders:
+
+Ignore new orders in the same direction as the active position.
+
+2. Opposite-Direction Orders:
+
+Close the active position before placing a new order in the opposite direction.
+
+3. Position Tracking:
+
+Use the getCurrentPosition function to fetch the current position for a symbol.

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { commonUtils } from "../../utils/index.js";
 import { configDetails, generateSignature, generateHeaders } from "./common.js";
+import { bybitTradesServices } from "./index.js";
 
 export const getPositions = async ({ category = "linear", symbol, limit, cursor, sandbox = true }) => {
     try {
@@ -46,7 +47,7 @@ export const getPositions = async ({ category = "linear", symbol, limit, cursor,
         throw new Error(err.message);
     }
 };
-// getPositions({ symbol: "SOLUSDT", sandbox: true }).then((res) => console.log(res.data));
+// getPositions({ symbol: "SOLUSDT", sandbox: true }).then((res) => console.log(JSON.stringify(res.data)));
 
 export const getPosition = async ({ symbol, side, size, sandbox = true }) => {
     try {
@@ -59,12 +60,7 @@ export const getPosition = async ({ symbol, side, size, sandbox = true }) => {
             return position;
         });
 
-        const success = position ? true : false;
-
-        return {
-            success,
-            data: position,
-        };
+        return position;
     } catch (err) {
         console.error(err?.response?.data || err.message);
         throw new Error(err.message);
@@ -132,3 +128,22 @@ export const setTrailingStop = async ({
 //     trailingStop: 50,
 //     sandbox: true,
 // });
+
+export const closePosition = async ({ symbol, category = "linear", side, sandbox }) => {
+    try {
+        const result = await bybitTradesServices.placeTrade({
+            category,
+            symbol,
+            side,
+            orderType: "Market",
+            qty: 0,
+            reduceOnly: true,
+            sandbox,
+        });
+        console.log("Position closed successfully:", result);
+        return result;
+    } catch (err) {
+        console.error("Error closing position:", err);
+        throw err;
+    }
+};

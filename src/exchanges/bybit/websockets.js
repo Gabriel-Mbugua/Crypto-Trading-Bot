@@ -54,12 +54,13 @@ export const initializeWebsocket = async (sandbox = true) => {
             data.data[0].orderStatus === "Filled" &&
             data.data[0].rejectReason === "EC_NoError"
         ) {
-            console.log("L-WEBSocket: Order filled...");
+            console.log("BYBIT-WEBSocket-57: Order filled...");
             bybitPositionServices.setTrailingStop({
                 symbol: data.data[0].symbol,
                 trailingStop: 20,
                 sandbox,
             });
+            console.log("BYBIT-WEBSocket-60: Trailing stop set...");
         }
     });
 
