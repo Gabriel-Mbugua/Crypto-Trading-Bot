@@ -3,6 +3,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const config = {
+    strategyConfigs: {
+        trailingStop: 10,
+    },
     bybit: {
         prodBaseUrl: "https://api.bybit.com",
         testnetBaseUrl: "https://api-testnet.bybit.com",

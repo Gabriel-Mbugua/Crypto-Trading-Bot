@@ -3,6 +3,7 @@ import crypto from "crypto";
 
 import { configDetails } from "./common.js";
 import { bybitPositionServices } from "./index.js";
+import { config } from "../../config.js";
 
 let client;
 let resolveWebsocketReady;
@@ -57,7 +58,7 @@ export const initializeWebsocket = async (sandbox = true) => {
             console.log("BYBIT-WEBSocket-57: Order filled...");
             bybitPositionServices.setTrailingStop({
                 symbol: data.data[0].symbol,
-                trailingStop: 20,
+                trailingStop: config.strategyConfigs.trailingStop,
                 sandbox,
             });
             console.log("BYBIT-WEBSocket-60: Trailing stop set...");
