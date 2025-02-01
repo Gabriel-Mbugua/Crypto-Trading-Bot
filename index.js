@@ -3,9 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 
 import apiRouter from "./src/api/routes/index.js";
-import { bybitWebsocketServices } from "./src/exchanges/bybit/index.js";
-import { ordersService } from "./src/api/services/index.js";
-import { commonUtils } from "./src/utils/index.js";
+import { telegramServices } from "./src/telegram/index.js";
 
 const app = express();
 
@@ -14,6 +12,8 @@ app.use(
         origin: true,
     })
 );
+
+// telegramServices.getBot()
 
 app.use(express.json({ limit: "1mb" }));
 

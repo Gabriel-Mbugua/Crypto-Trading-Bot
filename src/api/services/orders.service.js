@@ -1,4 +1,5 @@
 import { bybitTradesServices, bybitPositionServices, bybitWebsocketServices } from "../../exchanges/bybit/index.js";
+import { telegramChatsServices } from "../../telegram/index.js";
 import { commonUtils } from "../../utils/index.js";
 
 export const processOrder = async (data) => {
@@ -6,6 +7,17 @@ export const processOrder = async (data) => {
         console.log("L-ORDERS-5", JSON.stringify(data));
 
         const sandbox = data.sandbox === "true";
+
+        await telegramChatsServices.sendMessage({
+            message: {
+                title: `🔄 Order Received.`,
+                symbol: data.symbol,
+                side: data.side,
+                category: data.category,
+                orderType: data.orderType,
+                qty: data.qty,
+            },
+        });
 
         const positionsRef = await bybitPositionServices.getPositions({
             symbol: data.symbol,
@@ -25,6 +37,16 @@ export const processOrder = async (data) => {
 
         if (sameSidePosition) {
             console.log("An active position already exists in the same direction. Ignoring the new order.");
+            await telegramChatsServices.sendMessage({
+                message: {
+                    title: `🚫Ignored Order.: Active position in the same direction.`,
+                    symbol: data.symbol,
+                    side: data.side,
+                    category: data.category,
+                    orderType: data.orderType,
+                    qty: data.qty,
+                },
+            });
             return { success: false, message: "Active position in the same direction" };
         }
 
@@ -42,6 +64,17 @@ export const processOrder = async (data) => {
                 symbol: data.symbol,
                 side: closingSide,
                 sandbox,
+            });
+
+            await telegramChatsServices.sendMessage({
+                message: {
+                    title: `🟡 Closing Position: Closed position in the opposite direction.`,
+                    symbol: data.symbol,
+                    side: closingSide,
+                    category: data.category,
+                    orderType: data.orderType,
+                    qty: data.qty,
+                },
             });
 
             console.log("Position closed successfully:", closePositionResult);
@@ -62,15 +95,38 @@ export const processOrder = async (data) => {
             qty: data.qty,
             sandbox,
         });
+
+        await telegramChatsServices.sendMessage({
+            message: {
+                title: `✅ Order Placed: Successfully placed a new order.`,
+                symbol: data.symbol,
+                side: data.side,
+                category: data.category,
+                orderType: data.orderType,
+                qty: data.qty,
+            },
+        });
         console.log("Order placed successfully:", result);
 
         return result;
     } catch (err) {
         console.error(err?.response?.data || err.message);
+
+        await telegramChatsServices.sendMessage({
+            message: {
+                title: `❌ Order Failed: Failed to place a new order.`,
+                symbol: data.symbol,
+                side: data.side,
+                category: data.category,
+                orderType: data.orderType,
+                qty: data.qty,
+                error: err,
+            },
+        });
+
         throw new Error(err.message);
     }
 };
-// processOrder({ category: "linear", symbol: "SOLUSDT", side: "sell", orderType: "Market", qty: "0.106" });
 
 export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
     try {
@@ -86,7 +142,7 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
 // processOrder({
 //     category: "linear",
 //     symbol: "SOLUSDT",
-//     side: "Sell",
+//     side: "Buy",
 //     orderType: "Market",
 //     qty: "0.1",
 //     sandbox: "true",

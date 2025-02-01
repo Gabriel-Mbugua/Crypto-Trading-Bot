@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { configDetails } from "./common.js";
 import { bybitPositionServices } from "./index.js";
 import { config } from "../../config.js";
+import { telegramChatsServices } from "../../telegram/index.js";
 
 let client;
 let resolveWebsocketReady;
@@ -31,7 +32,7 @@ export const initializeWebsocket = async (sandbox = true) => {
         client.send(JSON.stringify(authMessage));
     });
 
-    client.on("message", (message) => {
+    client.on("message", async (message) => {
         console.log(`BYBIT-WEBSocket-29: ${message}`);
         const data = JSON.parse(message);
 
@@ -50,18 +51,48 @@ export const initializeWebsocket = async (sandbox = true) => {
             resolveWebsocketReady(); // Resolve the Promise when WebSocket is ready
         }
 
-        if (
-            data.topic === "order.linear" &&
-            data.data[0].orderStatus === "Filled" &&
-            data.data[0].rejectReason === "EC_NoError"
-        ) {
-            console.log("BYBIT-WEBSocket-57: Order filled...");
-            bybitPositionServices.setTrailingStop({
-                symbol: data.data[0].symbol,
-                trailingStop: config.strategyConfigs.trailingStop,
-                sandbox,
-            });
-            console.log("BYBIT-WEBSocket-60: Trailing stop set...");
+        if (data.topic === "order.linear") {
+            const orderStatus = data.data[0].orderStatus;
+            const rejectReason = data.data[0].rejectReason;
+
+            if (["Filled", "Cancelled"].includes(orderStatus)) {
+                await telegramChatsServices.sendMessage({
+                    message: {
+                        title: `🟠 Order ${orderStatus}: ${data.data[0].symbol}`,
+                        symbol: data.data[0].symbol,
+                        rejectReason,
+                    },
+                });
+            }
+
+            if (data.data[0].orderStatus === "Filled" && data.data[0].rejectReason === "EC_NoError") {
+                console.log("BYBIT-WEBSocket-57: Order filled...");
+
+                const positionsRef = await bybitPositionServices.getPositions({
+                    symbol: data.data[0].symbol,
+                    sandbox,
+                });
+
+                const positions = positionsRef.data.list.find(
+                    (position) => ["Buy", "Sell"].includes(position.side) && Number(position.size) > 0
+                );
+
+                if (positions.length > 0) {
+                    bybitPositionServices.setTrailingStop({
+                        symbol: data.data[0].symbol,
+                        trailingStop: config.strategyConfigs.trailingStop,
+                        sandbox,
+                    });
+
+                    await telegramChatsServices.sendMessage({
+                        message: {
+                            title: `🟢 Set trailing stop: ${config.strategyConfigs.trailingStop}%`,
+                            symbol: data.data[0].symbol,
+                        },
+                    });
+                    console.log("BYBIT-WEBSocket-60: Trailing stop set...");
+                }
+            }
         }
     });
 

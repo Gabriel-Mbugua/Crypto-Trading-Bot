@@ -3,9 +3,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const config = {
-    strategyConfigs: {
-        trailingStop: 10,
-    },
     bybit: {
         prodBaseUrl: "https://api.bybit.com",
         testnetBaseUrl: "https://api-testnet.bybit.com",
@@ -20,5 +17,13 @@ export const config = {
         prodPrivateWebsocketUrl: "wss://stream.bybit.com/v5/private",
         testnetTradeWebsocketUrl: "wss://stream-testnet.bybit.com/v5/trade",
         testnetPrivateWebsocketUrl: "wss://stream-testnet.bybit.com/v5/private",
+    },
+    strategyConfigs: {
+        trailingStop: 10,
+    },
+    telegram: {
+        chatId: "-1002396574718",
+        baseUrl: "https://api.telegram.org/bot",
+        botToken: process.env.TELEGRAM_BOT_TOKEN,
     },
 };
