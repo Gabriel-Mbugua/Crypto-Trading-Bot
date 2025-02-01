@@ -16,3 +16,10 @@ export const cleanAndSortData = (data) => {
     });
     return cleanOrderParams;
 };
+
+export const sleep = async (ms) => {
+    console.log("\nSleep: ", ms, "milliseconds.\n");
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+};

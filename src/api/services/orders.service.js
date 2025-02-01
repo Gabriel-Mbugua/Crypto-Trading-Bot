@@ -1,9 +1,16 @@
-import { bybitTradesServices, bybitPositionServices } from "../../exchanges/bybit/index.js";
+import { bybitTradesServices, bybitPositionServices, bybitWebsocketServices } from "../../exchanges/bybit/index.js";
+import { commonUtils } from "../../utils/index.js";
 
 export const processOrder = async (alertMessage) => {
     try {
         console.log("L-ORDERS-5", alertMessage);
         const data = JSON.parse(alertMessage);
+
+        // Initialize WebSocket
+        await bybitWebsocketServices.initializeWebsocket(true);
+
+        // Wait for WebSocket to be ready
+        await bybitWebsocketServices.waitForWebsocketReady();
 
         // Place the order
         const result = await bybitTradesServices.placeTrade({
@@ -16,18 +23,7 @@ export const processOrder = async (alertMessage) => {
         });
         console.log("Order placed successfully:", result);
 
-        await waitForPositionOpen({ symbol: data.symbol, side: data.side });
-
-        await bybitPositionServices.setTrailingStop({
-            category: data.category,
-            symbol: data.symbol,
-            trailingStop: 20,
-            tpslMode: "Full",
-            positionIdx: 0,
-            sandbox: true,
-        });
-
-        // return result;
+        return result;
     } catch (err) {
         console.error(err?.response?.data || err.message);
         throw new Error(err.message);

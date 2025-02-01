@@ -128,10 +128,7 @@ export const setTrailingStop = async ({
 };
 
 // setTrailingStop({
-//     category: "linear",
 //     symbol: "SOLUSDT",
 //     trailingStop: 50,
-//     tpslMode: "Full",
-//     positionIdx: 0,
 //     sandbox: true,
 // });

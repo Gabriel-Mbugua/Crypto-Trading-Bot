@@ -7,14 +7,16 @@ import { commonUtils } from "../../utils/index.js";
 const receiveWindow = 10_000;
 
 export const configDetails = (sandbox = true) => {
-    const baseUrl = sandbox ? config.bybit.demoBaseUrl : config.bybit.prodBaseUrl;
-    const apiKey = sandbox ? config.bybit.demoApiKey : config.bybit.prodApiKey;
-    const apiSecret = sandbox ? config.bybit.demoApiSecret : config.bybit.prodApiSecret;
+    const baseUrl = sandbox ? config.bybit.testnetBaseUrl : config.bybit.prodBaseUrl;
+    const apiKey = sandbox ? config.bybit.testnetApiKey : config.bybit.prodApiKey;
+    const apiSecret = sandbox ? config.bybit.testnetApiSecret : config.bybit.prodApiSecret;
+    const websocketTradeUrl = sandbox ? config.bybit.testnetPrivateWebsocketUrl : config.bybit.prodPrivateWebsocketUrl;
 
     return {
         baseUrl,
         apiKey,
         apiSecret,
+        websocketTradeUrl,
     };
 };
 

@@ -3,6 +3,9 @@ import cors from "cors";
 import helmet from "helmet";
 
 import apiRouter from "./src/api/routes/index.js";
+import { bybitWebsocketServices } from "./src/exchanges/bybit/index.js";
+import { ordersService } from "./src/api/services/index.js";
+import { commonUtils } from "./src/utils/index.js";
 
 const app = express();
 
@@ -15,6 +18,14 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 
 app.use(helmet());
+
+// ordersService.processOrder(`{
+//     "category": "linear",
+//     "symbol": "SOLUSDT",
+//     "side": "Buy",
+//     "orderType": "Market",
+//     "qty": "0.1"
+// }`);
 
 app.use("/api", apiRouter);
 
