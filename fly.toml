@@ -4,7 +4,7 @@
 #
 
 app = 'crypto-trading-bot-czaheg'
-primary_region = 'jnb'
+primary_region = 'sin'
 
 [build]
 
