@@ -118,6 +118,8 @@ export const initializeWebsocket = async (sandbox = true) => {
                 code: err.code,
                 statusCode: err.statusCode,
                 headers: err.headers,
+                readyState: client.readyState,
+                url: websocketTradeUrl,
             });
         });
     } catch (err) {
