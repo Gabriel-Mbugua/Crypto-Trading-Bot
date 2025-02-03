@@ -16,18 +16,11 @@ export const initializeWebsocket = async (sandbox = true) => {
     try {
         const { apiKey, apiSecret, websocketTradeUrl } = configDetails(sandbox);
 
-        console.log("BYBIT-WEBSocket-18: Initializing websocket connection...");
+        console.log(`BYBIT- WEBSocket-18: Initializing websocket connection... ${websocketTradeUrl}`);
 
-        const websocketOptions = {
-            headers: {
-                "User-Agent": "bybit-bot",
-            },
-            followRedirects: true,
-            handshakeTimeout: 15000,
-            rejectUnauthorized: true,
-        };
+        client = new websocket(websocketTradeUrl);
 
-        client = new websocket(websocketTradeUrl, websocketOptions);
+        console.log(`BYBIT- WEBSocket-20: Websocket connection initialized... ${client}`);
 
         client.on("open", () => {
             console.log("Authenticating trade websocket connection...");
@@ -114,6 +107,7 @@ export const initializeWebsocket = async (sandbox = true) => {
 
         client.on("error", (err) => {
             console.error("BYBIT-WEBSocket-108: Error on websocket connection:", err);
+            throw err;
         });
     } catch (err) {
         console.error(err);
