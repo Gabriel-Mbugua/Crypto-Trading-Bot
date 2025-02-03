@@ -16,11 +16,14 @@ export const initializeWebsocket = async (sandbox = true) => {
     try {
         const { apiKey, apiSecret, websocketTradeUrl } = configDetails(sandbox);
 
-        console.log({ websocketTradeUrl });
-
         console.log(`BYBIT- WEBSocket-18: Initializing websocket connection... ${websocketTradeUrl}`);
 
-        client = new websocket(websocketTradeUrl);
+        client = new websocket(websocketTradeUrl, {
+            perMessageDeflate: false,
+            origin: "https://stream-testnet.bybit.com",
+            protocolVersion: 13,
+            rejectUnauthorized: false, // Use cautiously (testing only)
+        });
 
         console.log(`BYBIT- WEBSocket-20: Websocket connection initialized... ${client}`);
 
