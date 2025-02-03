@@ -16,6 +16,8 @@ export const initializeWebsocket = async (sandbox = true) => {
     try {
         const { apiKey, apiSecret, websocketTradeUrl } = configDetails(sandbox);
 
+        console.log({ websocketTradeUrl });
+
         console.log(`BYBIT- WEBSocket-18: Initializing websocket connection... ${websocketTradeUrl}`);
 
         client = new websocket(websocketTradeUrl);
