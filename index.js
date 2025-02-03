@@ -3,17 +3,10 @@ import cors from "cors";
 import helmet from "helmet";
 
 import apiRouter from "./src/api/routes/index.js";
-import { telegramServices } from "./src/telegram/index.js";
 
 const app = express();
 
-app.use(
-    cors({
-        origin: true,
-    })
-);
-
-// telegramServices.getBot()
+app.use(cors({ origin: true }));
 
 app.use(express.json({ limit: "1mb" }));
 

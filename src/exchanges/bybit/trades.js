@@ -126,7 +126,7 @@ const closeLongPosition = {
     symbol: "SOLUSDT",
     side: "Sell",
     orderType: "Market",
-    qty: "0.1",
+    qty: "0",
     reduceOnly: true,
 };
 
@@ -135,7 +135,7 @@ const closeShortPosition = {
     symbol: "SOLUSDT",
     side: "Buy",
     orderType: "Market",
-    qty: "0.1",
+    qty: "0",
     reduceOnly: true,
 };
 // placeOrder(enterLong).then((res) => console.log(res));
@@ -240,6 +240,7 @@ export const getOpenClosedOrders = async ({ category = "linear", openOnly, baseC
     }
 };
 // getOpenClosedOrders({ symbol: "SOLUSDT" }).then((res) => console.log(JSON.stringify(res)));
+// getOpenClosedOrders({ symbol: "SOLUSDT", sandbox: false }).then((res) => console.log(JSON.stringify(res)));
 
 export const getOrder = async ({ orderId, symbol, side, sandbox = true }) => {
     try {

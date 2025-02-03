@@ -13,96 +13,104 @@ let websocketReady = new Promise((resolve) => {
 });
 
 export const initializeWebsocket = async (sandbox = true) => {
-    const { apiKey, apiSecret, websocketTradeUrl } = configDetails(sandbox);
+    try {
+        const { apiKey, apiSecret, websocketTradeUrl } = configDetails(sandbox);
 
-    client = new websocket(websocketTradeUrl);
+        console.log("BYBIT-WEBSocket-18: Initializing websocket connection...");
+        console.log({ apiKey, apiSecret, websocketTradeUrl });
 
-    client.on("open", () => {
-        console.log("Authenticating trade websocket connection...");
+        client = new websocket(websocketTradeUrl);
 
-        const expiresIn = Date.now() + 600 * 1000; // 10 minutes expiry in ms
+        client.on("open", () => {
+            console.log("Authenticating trade websocket connection...");
 
-        const signature = crypto.createHmac("sha256", apiSecret).update(`GET/realtime${expiresIn}`).digest("hex");
+            const expiresIn = Date.now() + 600 * 1000; // 10 minutes expiry in ms
 
-        const authMessage = {
-            op: "auth",
-            args: [apiKey, expiresIn, signature],
-        };
+            const signature = crypto.createHmac("sha256", apiSecret).update(`GET/realtime${expiresIn}`).digest("hex");
 
-        client.send(JSON.stringify(authMessage));
-    });
-
-    client.on("message", async (message) => {
-        console.log(`BYBIT-WEBSocket-29: ${message}`);
-        const data = JSON.parse(message);
-
-        // Handle authentication response
-        if (data.op === "auth" && data.success) {
-            const subscribeMessage = {
-                op: "subscribe",
-                args: ["order.linear"],
+            const authMessage = {
+                op: "auth",
+                args: [apiKey, expiresIn, signature],
             };
-            client.send(JSON.stringify(subscribeMessage));
-        }
 
-        // Handle subscription response
-        if (data.op === "subscribe" && data.success) {
-            console.log("Subscribed to order updates.");
-            resolveWebsocketReady(); // Resolve the Promise when WebSocket is ready
-        }
+            client.send(JSON.stringify(authMessage));
+        });
 
-        if (data.topic === "order.linear") {
-            const orderStatus = data.data[0].orderStatus;
-            const rejectReason = data.data[0].rejectReason;
+        client.on("message", async (message) => {
+            console.log(`BYBIT-WEBSocket-29: ${message}`);
+            const data = JSON.parse(message);
 
-            if (["Filled", "Cancelled"].includes(orderStatus)) {
-                await telegramChatsServices.sendMessage({
-                    message: {
-                        title: `🟠 Order ${orderStatus}: ${data.data[0].symbol}`,
-                        symbol: data.data[0].symbol,
-                        rejectReason,
-                    },
-                });
+            // Handle authentication response
+            if (data.op === "auth" && data.success) {
+                const subscribeMessage = {
+                    op: "subscribe",
+                    args: ["order.linear"],
+                };
+                client.send(JSON.stringify(subscribeMessage));
             }
 
-            if (data.data[0].orderStatus === "Filled" && data.data[0].rejectReason === "EC_NoError") {
-                console.log("BYBIT-WEBSocket-57: Order filled...");
+            // Handle subscription response
+            if (data.op === "subscribe" && data.success) {
+                console.log("Subscribed to order updates.");
+                resolveWebsocketReady(); // Resolve the Promise when WebSocket is ready
+            }
 
-                const positionsRef = await bybitPositionServices.getPositions({
-                    symbol: data.data[0].symbol,
-                    sandbox,
-                });
+            if (data.topic === "order.linear") {
+                const orderStatus = data.data[0].orderStatus;
+                const rejectReason = data.data[0].rejectReason;
 
-                const positions = positionsRef.data.list.find(
-                    (position) => ["Buy", "Sell"].includes(position.side) && Number(position.size) > 0
-                );
+                if (["Filled", "Cancelled"].includes(orderStatus)) {
+                    await telegramChatsServices.sendMessage({
+                        message: {
+                            title: `🟠 Order ${orderStatus}: ${data.data[0].symbol}`,
+                            symbol: data.data[0].symbol,
+                            rejectReason,
+                        },
+                    });
+                }
 
-                if (positions.length > 0) {
-                    bybitPositionServices.setTrailingStop({
+                if (data.data[0].orderStatus === "Filled" && data.data[0].rejectReason === "EC_NoError") {
+                    console.log("BYBIT-WEBSocket-57: Order filled...");
+
+                    const positionsRef = await bybitPositionServices.getPositions({
                         symbol: data.data[0].symbol,
-                        trailingStop: config.strategyConfigs.trailingStop,
                         sandbox,
                     });
 
-                    await telegramChatsServices.sendMessage({
-                        message: {
-                            title: `🟢 Set trailing stop: ${config.strategyConfigs.trailingStop}%`,
+                    const positions = positionsRef.data.list.find(
+                        (position) => ["Buy", "Sell"].includes(position.side) && Number(position.size) > 0
+                    );
+
+                    if (positions.length > 0) {
+                        bybitPositionServices.setTrailingStop({
                             symbol: data.data[0].symbol,
-                        },
-                    });
-                    console.log("BYBIT-WEBSocket-60: Trailing stop set...");
+                            trailingStop: config.strategyConfigs.trailingStop,
+                            sandbox,
+                        });
+
+                        await telegramChatsServices.sendMessage({
+                            message: {
+                                title: `🟢 Set trailing stop: ${config.strategyConfigs.trailingStop}%`,
+                                symbol: data.data[0].symbol,
+                            },
+                        });
+                        console.log("BYBIT-WEBSocket-60: Trailing stop set...");
+                    }
                 }
             }
-        }
-    });
+        });
 
-    client.on("close", () => {
-        console.log("WebSocket connection closed.");
-    });
+        client.on("close", () => {
+            console.log("WebSocket connection closed.");
+        });
 
-    client.on("error", (err) => {
-        console.error("WebSocket error:", err);
-    });
+        client.on("error", (err) => {
+            console.error("WebSocket error:", err);
+        });
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
 };
 
 export const waitForWebsocketReady = async () => {

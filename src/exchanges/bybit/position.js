@@ -48,6 +48,7 @@ export const getPositions = async ({ category = "linear", symbol, limit, cursor,
     }
 };
 // getPositions({ symbol: "SOLUSDT", sandbox: true }).then((res) => console.log(JSON.stringify(res.data)));
+// getPositions({ symbol: "SOLUSDT", sandbox: false }).then((res) => console.log(JSON.stringify(res.data)));
 
 export const getPosition = async ({ symbol, side, size, sandbox = true }) => {
     try {
