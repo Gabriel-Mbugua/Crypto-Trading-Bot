@@ -117,7 +117,6 @@ export const initializeWebsocket = async (sandbox = true) => {
                 statusCode: err.statusCode,
                 headers: err.headers,
             });
-            throw err;
         });
     } catch (err) {
         console.error(err);
