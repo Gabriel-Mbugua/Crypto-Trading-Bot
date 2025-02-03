@@ -33,5 +33,3 @@ primary_region = 'sin'
 
 [[egress]]
   region = "sin"
-  protocol = "tcp"
-  ports = [443]

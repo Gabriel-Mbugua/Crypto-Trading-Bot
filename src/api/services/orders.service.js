@@ -8,6 +8,9 @@ export const processOrder = async (data) => {
 
         const sandbox = data.sandbox === "true";
 
+        if (data.side.toLowerCase() === "sell") data.side = "Sell";
+        if (data.side.toLowerCase() === "buy") data.side = "Buy";
+
         await telegramChatsServices.sendMessage({
             message: {
                 title: `🔄 Order Received.`,
