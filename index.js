@@ -3,6 +3,9 @@ import cors from "cors";
 import helmet from "helmet";
 
 import apiRouter from "./src/api/routes/index.js";
+import { config } from "./src/config.js";
+
+const port = config.port;
 
 const app = express();
 
@@ -18,6 +21,6 @@ app.get("/", (req, res) => {
     res.json({ message: "Hello World" });
 });
 
-app.listen(3000, () => {
+app.listen(port, () => {
     console.log("Server is running on port 3000");
 });

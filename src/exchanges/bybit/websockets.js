@@ -18,16 +18,13 @@ export const initializeWebsocket = async (sandbox = true) => {
 
         console.log(`BYBIT- WEBSocket-18: Initializing websocket connection... ${websocketTradeUrl}`);
 
-        client = new websocket(websocketTradeUrl, {
-            rejectUnauthorized: true,
-            checkServerIdentity: () => undefined, // Bypass hostname verification
-            headers: {
-                Host: "stream-testnet.bybit.com",
-                Origin: "https://stream-testnet.bybit.com",
-            },
-        });
+        client = new websocket(websocketTradeUrl, { port: config.port });
 
         console.log(`BYBIT- WEBSocket-20: Websocket connection initialized... ${client}`);
+
+        client.on("connection", () => {
+            console.log("BYBIT- WEBSocket-27: Connection established...");
+        });
 
         client.on("open", () => {
             console.log("Authenticating trade websocket connection...");

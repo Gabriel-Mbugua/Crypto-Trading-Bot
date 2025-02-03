@@ -18,6 +18,7 @@ export const config = {
         testnetTradeWebsocketUrl: "wss://stream-testnet.bybit.com/v5/trade",
         testnetPrivateWebsocketUrl: "wss://stream-testnet.bybit.com/v5/private",
     },
+    port: process.env.PORT || 3000,
     strategyConfigs: {
         trailingStop: 10,
     },
