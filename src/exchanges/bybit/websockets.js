@@ -18,7 +18,16 @@ export const initializeWebsocket = async (sandbox = true) => {
 
         console.log("BYBIT-WEBSocket-18: Initializing websocket connection...");
 
-        client = new websocket(websocketTradeUrl);
+        const websocketOptions = {
+            headers: {
+                "User-Agent": "bybit-bot",
+            },
+            followRedirects: true,
+            handshakeTimeout: 15000,
+            rejectUnauthorized: true,
+        };
+
+        client = new websocket(websocketTradeUrl, websocketOptions);
 
         client.on("open", () => {
             console.log("Authenticating trade websocket connection...");
