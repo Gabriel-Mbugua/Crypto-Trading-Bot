@@ -26,6 +26,10 @@ primary_region = 'sin'
     interval = 10000
     timeout = 2000
 
+  [[services.processes]]
+    name = "app"
+    cmd = "node index.js"
+
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
