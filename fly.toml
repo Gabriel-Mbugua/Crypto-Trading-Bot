@@ -24,6 +24,14 @@ primary_region = 'sin'
   auto_start_machines = true
   min_machines_running = 0
 
+[[services.outbound]]
+  protocol = "tcp"
+  ports = [443, 80]
+  to = [
+    "stream-testnet.bybit.com",
+    "stream.bybit.com"
+  ]
+
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
