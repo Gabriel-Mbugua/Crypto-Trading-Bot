@@ -17,7 +17,6 @@ export const initializeWebsocket = async (sandbox = true) => {
         const { apiKey, apiSecret, websocketTradeUrl } = configDetails(sandbox);
 
         console.log("BYBIT-WEBSocket-18: Initializing websocket connection...");
-        console.log({ apiKey, apiSecret, websocketTradeUrl });
 
         client = new websocket(websocketTradeUrl);
 
@@ -105,7 +104,7 @@ export const initializeWebsocket = async (sandbox = true) => {
         });
 
         client.on("error", (err) => {
-            console.error("WebSocket error:", err);
+            console.error("BYBIT-WEBSocket-108: Error on websocket connection:", err);
         });
     } catch (err) {
         console.error(err);
