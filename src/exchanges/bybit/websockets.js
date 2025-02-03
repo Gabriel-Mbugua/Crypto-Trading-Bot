@@ -18,13 +18,16 @@ export const initializeWebsocket = async (sandbox = true) => {
 
         console.log(`BYBIT- WEBSocket-18: Initializing websocket connection... ${websocketTradeUrl}`);
 
-        client = new websocket(websocketTradeUrl, { port: config.port });
+        client = new websocket(websocketTradeUrl, {
+            handshakeTimeout: 10000, // 10 seconds
+            headers: {
+                "User-Agent": "Mozilla/5.0", // Add a user agent
+                Origin: "https://crypto-trading-bot-czaheg.fly.dev", // Add your app's domain
+            },
+            followRedirects: true,
+        });
 
         console.log(`BYBIT- WEBSocket-20: Websocket connection initialized... ${client}`);
-
-        client.on("connection", () => {
-            console.log("BYBIT- WEBSocket-27: Connection established...");
-        });
 
         client.on("open", () => {
             console.log("Authenticating trade websocket connection...");
@@ -122,6 +125,7 @@ export const initializeWebsocket = async (sandbox = true) => {
         throw err;
     }
 };
+// initializeWebsocket();
 
 export const waitForWebsocketReady = async () => {
     await websocketReady;
