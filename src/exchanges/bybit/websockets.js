@@ -108,7 +108,12 @@ export const initializeWebsocket = async (sandbox = true) => {
         });
 
         client.on("error", (err) => {
-            console.error("BYBIT-WEBSocket-108: Error on websocket connection:", err);
+            console.error("BYBIT-WEBSocket-108: Detailed error:", {
+                message: err.message,
+                code: err.code,
+                statusCode: err.statusCode,
+                headers: err.headers,
+            });
             throw err;
         });
     } catch (err) {
