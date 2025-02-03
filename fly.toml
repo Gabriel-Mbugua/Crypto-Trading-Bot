@@ -19,14 +19,9 @@ primary_region = 'sin'
     handlers = ["tls", "http"]
     port = 443          # Inbound HTTPS (upgrades to WebSocket)
 
-  # Allow outbound connections to Bybit’s WebSocket endpoints
-  [[services.outbound]]
-    protocol = "tcp"
-    ports = [443, 80]
-    to = [
-      "stream-testnet.bybit.com",  # Sandbox
-      "stream.bybit.com"           # Production
-    ]
+  [[services.tcp_checks]]
+    interval = 10000
+    timeout = 2000
 
 [[vm]]
   memory = '1gb'
