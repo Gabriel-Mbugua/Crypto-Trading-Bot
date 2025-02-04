@@ -4,7 +4,7 @@ import { commonUtils } from "../../utils/index.js";
 
 export const processOrder = async (data) => {
     try {
-        console.log("L-ORDERS-5", JSON.stringify(data));
+        console.info("L-ORDERS-5", JSON.stringify(data));
 
         const sandbox = data.sandbox === "true";
 
@@ -39,7 +39,7 @@ export const processOrder = async (data) => {
         );
 
         if (sameSidePosition) {
-            console.log("An active position already exists in the same direction. Ignoring the new order.");
+            console.info("An active position already exists in the same direction. Ignoring the new order.");
             await telegramChatsServices.sendMessage({
                 message: {
                     title: `🚫Ignored Order.: Active position in the same direction.`,
@@ -56,7 +56,7 @@ export const processOrder = async (data) => {
         // Check if there's an active position in the opposite direction
         // if so, close it before placing the new order
         if (oppositeSidePosition) {
-            console.log(
+            console.info(
                 "An active position exists in the opposite direction. Closing it before placing the new order."
             );
 
@@ -80,7 +80,7 @@ export const processOrder = async (data) => {
                 },
             });
 
-            console.log("Position closed successfully:", closePositionResult);
+            console.info("Position closed successfully:", closePositionResult);
         }
 
         // Initialize WebSocket
@@ -109,7 +109,7 @@ export const processOrder = async (data) => {
                 qty: data.qty,
             },
         });
-        console.log("Order placed successfully:", result);
+        console.info("Order placed successfully:", result);
 
         return result;
     } catch (err) {

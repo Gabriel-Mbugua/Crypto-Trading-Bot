@@ -16,14 +16,14 @@ export const initializeWebsocket = async (sandbox = true) => {
     try {
         const { apiKey, apiSecret, websocketTradeUrl } = configDetails(sandbox);
 
-        console.log(`BYBIT- WEBSocket-18: Initializing websocket connection... ${websocketTradeUrl}`);
+        console.info(`BYBIT- WEBSocket-18: Initializing websocket connection... ${websocketTradeUrl}`);
 
         client = new websocket(websocketTradeUrl);
 
-        console.log(`BYBIT- WEBSocket-20: Websocket connection initialized... ${client}`);
+        console.info(`BYBIT- WEBSocket-20: Websocket connection initialized... ${client}`);
 
         client.on("open", () => {
-            console.log("Authenticating trade websocket connection...");
+            console.info("Authenticating trade websocket connection...");
 
             const expiresIn = Date.now() + 600 * 1000; // 10 minutes expiry in ms
 
@@ -38,7 +38,7 @@ export const initializeWebsocket = async (sandbox = true) => {
         });
 
         client.on("message", async (message) => {
-            console.log(`BYBIT-WEBSocket-29: ${message}`);
+            console.info(`BYBIT-WEBSocket-29: ${message}`);
             const data = JSON.parse(message);
 
             // Handle authentication response
@@ -52,7 +52,7 @@ export const initializeWebsocket = async (sandbox = true) => {
 
             // Handle subscription response
             if (data.op === "subscribe" && data.success) {
-                console.log("Subscribed to order updates.");
+                console.info("Subscribed to order updates.");
                 resolveWebsocketReady(); // Resolve the Promise when WebSocket is ready
             }
 
@@ -71,7 +71,7 @@ export const initializeWebsocket = async (sandbox = true) => {
                 }
 
                 if (data.data[0].orderStatus === "Filled" && data.data[0].rejectReason === "EC_NoError") {
-                    console.log("BYBIT-WEBSocket-57: Order filled...");
+                    console.info("BYBIT-WEBSocket-57: Order filled...");
 
                     const positionsRef = await bybitPositionServices.getPositions({
                         symbol: data.data[0].symbol,
@@ -95,18 +95,18 @@ export const initializeWebsocket = async (sandbox = true) => {
                                 symbol: data.data[0].symbol,
                             },
                         });
-                        console.log("BYBIT-WEBSocket-60: Trailing stop set...");
+                        console.info("BYBIT-WEBSocket-60: Trailing stop set...");
                     }
                 }
             }
         });
 
         client.on("close", () => {
-            console.log("WebSocket connection closed.");
+            console.error("BYBIT-WEBSocket-105: WebSocket connection closed.");
         });
 
         client.on("error", (err) => {
-            console.error("BYBIT-WEBSocket-108: Detailed error:", {
+            console.error("BYBIT-WEBSocket-109: Detailed error:", {
                 message: err.message,
                 code: err.code,
                 statusCode: err.statusCode,
