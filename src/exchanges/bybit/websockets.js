@@ -105,7 +105,14 @@ export const initializeWebsocket = async (sandbox = true) => {
             console.error("BYBIT-WEBSocket-105: WebSocket connection closed.");
         });
 
-        client.on("error", (err) => {
+        client.on("error", async (err) => {
+            await telegramChatsServices.sendMessage({
+                message: {
+                    title: `🛑 Error in websocket connection`,
+                    message: err.message,
+                },
+            });
+
             console.error("BYBIT-WEBSocket-109: Detailed error:", {
                 message: err.message,
                 code: err.code,

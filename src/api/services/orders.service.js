@@ -145,8 +145,17 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
 // processOrder({
 //     category: "linear",
 //     symbol: "SOLUSDT",
-//     side: "Buy",
+//     side: "buy",
 //     orderType: "Market",
-//     qty: "0.1",
+//     qty: "0.466",
+//     reduceOnly: "{{strategy.order.red█uceOnly}}",
 //     sandbox: "true",
 // });
+
+// const closePositionResult = await bybitPositionServices.closePosition({
+//     symbol: "SOLUSDT",
+//     side: "Buy",
+//     sandbox: true,
+// });
+
+// console.info(closePositionResult);

@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { configDetails, generateHeaders, generateSignature } from "./common.js";
 import { commonUtils } from "../../utils/index.js";
+import { marketService } from "../../api/services/index.js";
 
 export const placeTrade = async ({
     // Required parameters
@@ -42,6 +43,8 @@ export const placeTrade = async ({
         const url = `${baseUrl}/v5/order/create`;
         const method = "POST";
 
+        const adjustedQty = await marketService.adjustQuantity({ desiredQty: qty, symbol });
+
         const timestamp = Date.now();
 
         const orderParams = {
@@ -49,7 +52,7 @@ export const placeTrade = async ({
             symbol,
             side,
             orderType,
-            qty: qty.toString(),
+            qty: adjustedQty.toString(),
             isLeverage: isLeverage ? 1 : 0,
             timeInForce,
             positionIdx,
