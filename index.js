@@ -4,6 +4,7 @@ import helmet from "helmet";
 
 import apiRouter from "./src/api/routes/index.js";
 import { config } from "./src/config.js";
+import axios from "axios";
 
 const port = config.port;
 
@@ -19,6 +20,15 @@ app.use("/api", apiRouter);
 
 app.get("/", (req, res) => {
     res.json({ message: "Hello World" });
+});
+
+app.get("/ip", async (req, res) => {
+    try {
+        const response = await axios.get("https://api.ipify.org?format=json");
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.get("/health", (req, res) => {
