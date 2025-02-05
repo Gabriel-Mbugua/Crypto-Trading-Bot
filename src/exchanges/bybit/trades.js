@@ -92,18 +92,18 @@ export const placeTrade = async ({
         };
     } catch (err) {
         if (err.response) {
-            console.error("API Error:", err.response.data);
+            console.error("BYBIT-TRADES-101: API Error:", err.response.data);
             throw new Error(`Bybit API Error: ${err.response.data.retMsg || err.message}`);
         }
 
         if (err.request) {
             // Request made but no response received
-            console.error("Network Error:", err.request);
+            console.error("BYBIT-TRADES-107: Network Error:", err.request);
             throw new Error("Network error: No response from Bybit API");
         }
 
         // Error in request setup
-        console.error("Request Error:", err.message);
+        console.error("BYBIT-TRADES-106: Request Error:", err);
         throw err;
     }
 };
