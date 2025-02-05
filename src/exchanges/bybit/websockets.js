@@ -57,6 +57,7 @@ export const initializeWebsocket = async (sandbox = true) => {
             }
 
             if (data.topic === "order.linear") {
+                console.info("BYBIT-WEBSocket-40: Order update received...", JSON.stringify(data));
                 const orderStatus = data.data[0].orderStatus;
                 const rejectReason = data.data[0].rejectReason;
 

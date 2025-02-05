@@ -92,10 +92,6 @@ const processOrder = async (data) => {
                 position.side !== data.side && Number(position.size) > 0 && ["Buy", "Sell"].includes(position.side)
         );
 
-        const sameSideOrder = orders.find(
-            (order) => order.side === data.side && Number(order.qty) > 0 && ["Buy", "Sell"].includes(order.side)
-        );
-
         if (sameSidePosition) {
             console.info("An active position already exists in the same direction. Ignoring the new order.");
             await telegramChatsServices.sendMessage({
