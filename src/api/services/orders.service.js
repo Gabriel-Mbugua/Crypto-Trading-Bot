@@ -54,12 +54,34 @@ const processOrder = async (data) => {
     try {
         const sandbox = data.sandbox;
 
-        const positionsRef = await bybitPositionServices.getPositions({
+        const [positionsRef, ordersRef] = await Promise.all([
+            bybitPositionServices.getPositions({
+                symbol: data.symbol,
+                sandbox,
+            }),
+            bybitTradesServices.getOpenClosedOrders({
+                symbol: data.symbol,
+                sandbox,
+            }),
+        ]);
+
+        const positions = positionsRef.data.list;
+        const orders = ordersRef.data.list;
+
+        const pendingOrders = await bybitTradesServices.checkPendingOrders({
             symbol: data.symbol,
             sandbox,
         });
 
-        const positions = positionsRef.data.list;
+        if (pendingOrders) {
+            console.info("Pending orders found. Ignoring the new order.");
+            await telegramChatsServices.sendMessage({
+                message: {
+                    title: `🚫Ignored Order.: Pending orders found.`,
+                },
+            });
+            return;
+        }
 
         const sameSidePosition = positions.find(
             (position) =>
@@ -68,6 +90,10 @@ const processOrder = async (data) => {
         const oppositeSidePosition = positions.find(
             (position) =>
                 position.side !== data.side && Number(position.size) > 0 && ["Buy", "Sell"].includes(position.side)
+        );
+
+        const sameSideOrder = orders.find(
+            (order) => order.side === data.side && Number(order.qty) > 0 && ["Buy", "Sell"].includes(order.side)
         );
 
         if (sameSidePosition) {
@@ -180,11 +206,19 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
 // processOrder({
 //     category: "linear",
 //     symbol: "SOLUSDT",
-//     side: "buy",
+//     side: "Buy",
 //     orderType: "Market",
 //     qty: "0.466",
-//     reduceOnly: "{{strategy.order.red█uceOnly}}",
-//     sandbox: "true",
+//     sandbox: true,
+// });
+
+// processOrder({
+//     category: "linear",
+//     symbol: "SOLUSDT",
+//     side: "Buy",
+//     orderType: "Market",
+//     qty: "0.466",
+//     sandbox: true,
 // });
 
 // const closePositionResult = await bybitPositionServices.closePosition({

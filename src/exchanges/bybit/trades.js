@@ -310,3 +310,16 @@ export const cancelAllOrders = async ({ category = "linear", symbol, sandbox = t
     }
 };
 // cancelAllOrders({ symbol: "SOLUSDT", sandbox: true }).then((res) => console.log(res));
+
+export const checkPendingOrders = async ({ symbol, sandbox = true }) => {
+    const orders = await getOpenClosedOrders({
+        symbol,
+        sandbox,
+    });
+
+    const pendingOrders = orders.filter(
+        (order) => order.status === "Created" || order.status === "New" || order.status === "Processing"
+    );
+
+    return pendingOrders.length > 0;
+};
