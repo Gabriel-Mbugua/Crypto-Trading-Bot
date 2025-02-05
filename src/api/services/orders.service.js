@@ -2,12 +2,12 @@ import { bybitTradesServices, bybitPositionServices, bybitWebsocketServices } fr
 import { telegramChatsServices } from "../../telegram/index.js";
 import { commonUtils } from "../../utils/index.js";
 
-export const processOrder = async (data) => {
+export const receiveOrder = async (data) => {
     try {
         console.info("L-ORDERS-5", JSON.stringify(data));
 
         const sandbox = data.sandbox === "true";
-
+        data.sandbox = sandbox;
         if (data.side.toLowerCase() === "sell") data.side = "Sell";
         if (data.side.toLowerCase() === "buy") data.side = "Buy";
 
@@ -22,6 +22,33 @@ export const processOrder = async (data) => {
             },
         });
 
+        processOrder(data);
+
+        return {
+            success: true,
+            message: "Order received successfully",
+        };
+    } catch (err) {
+        console.error(err?.response?.data || err.message);
+
+        await telegramChatsServices.sendMessage({
+            message: {
+                title: `❌ Order Failed: Failed to place a new order.`,
+                symbol: data.symbol,
+                side: data.side,
+                category: data.category,
+                orderType: data.orderType,
+                qty: data.qty,
+                error: err,
+            },
+        });
+
+        throw new Error(err.message);
+    }
+};
+
+const processOrder = async (data) => {
+    try {
         const positionsRef = await bybitPositionServices.getPositions({
             symbol: data.symbol,
             sandbox,
@@ -127,7 +154,10 @@ export const processOrder = async (data) => {
             },
         });
 
-        throw new Error(err.message);
+        return {
+            success: false,
+            message: err.message,
+        };
     }
 };
 
