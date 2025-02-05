@@ -54,24 +54,18 @@ const processOrder = async (data) => {
     try {
         const sandbox = data.sandbox;
 
-        const [positionsRef, ordersRef] = await Promise.all([
+        const [positionsRef, pendingOrders] = await Promise.all([
             bybitPositionServices.getPositions({
                 symbol: data.symbol,
                 sandbox,
             }),
-            bybitTradesServices.getOpenClosedOrders({
+            bybitTradesServices.checkPendingOrders({
                 symbol: data.symbol,
                 sandbox,
             }),
         ]);
 
         const positions = positionsRef.data.list;
-        const orders = ordersRef.data.list;
-
-        const pendingOrders = await bybitTradesServices.checkPendingOrders({
-            symbol: data.symbol,
-            sandbox,
-        });
 
         if (pendingOrders) {
             console.info("Pending orders found. Ignoring the new order.");
@@ -202,12 +196,12 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
 // processOrder({
 //     category: "linear",
 //     symbol: "SOLUSDT",
-//     side: "Buy",
+//     postionSize: "0",
+//     side: "sell",
 //     orderType: "Market",
-//     qty: "0.466",
+//     qty: "0.478",
 //     sandbox: true,
 // });
-
 // processOrder({
 //     category: "linear",
 //     symbol: "SOLUSDT",
