@@ -49,6 +49,8 @@ export const receiveOrder = async (data) => {
 
 const processOrder = async (data) => {
     try {
+        const sandbox = data.sandbox;
+
         const positionsRef = await bybitPositionServices.getPositions({
             symbol: data.symbol,
             sandbox,
