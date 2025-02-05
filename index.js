@@ -14,6 +14,11 @@ app.use(cors({ origin: true }));
 
 app.use(express.json({ limit: "1mb" }));
 
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`, req.body);
+    next();
+});
+
 app.use(helmet());
 
 app.use("/api", apiRouter);
