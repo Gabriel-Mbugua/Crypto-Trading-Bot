@@ -197,7 +197,7 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
 //     category: "linear",
 //     symbol: "SOLUSDT",
 //     postionSize: "0",
-//     side: "sell",
+//     side: "Sell",
 //     orderType: "Market",
 //     qty: "0.478",
 //     sandbox: true,

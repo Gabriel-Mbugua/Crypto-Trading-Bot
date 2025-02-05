@@ -71,7 +71,7 @@ export const initializeWebsocket = async (sandbox = true) => {
                     });
                 }
 
-                if (data.data[0].orderStatus === "Filled" && data.data[0].rejectReason === "EC_NoError") {
+                if (orderStatus === "Filled" && rejectReason === "EC_NoError") {
                     console.info("BYBIT-WEBSocket-57: Order filled...");
 
                     const positionsRef = await bybitPositionServices.getPositions({
@@ -79,11 +79,11 @@ export const initializeWebsocket = async (sandbox = true) => {
                         sandbox,
                     });
 
-                    const positions = positionsRef.data.list.find(
+                    const position = positionsRef.data.list.find(
                         (position) => ["Buy", "Sell"].includes(position.side) && Number(position.size) > 0
                     );
 
-                    if (positions.length > 0) {
+                    if (position) {
                         bybitPositionServices.setTrailingStop({
                             symbol: data.data[0].symbol,
                             trailingStop: config.strategyConfigs.trailingStop,
