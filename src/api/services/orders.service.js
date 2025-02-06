@@ -1,6 +1,9 @@
 import { bybitTradesServices, bybitPositionServices, bybitWebsocketServices } from "../../exchanges/bybit/index.js";
 import { telegramChatsServices } from "../../telegram/index.js";
+import { sleep } from "../../utils/common.utils.js";
 import { commonUtils } from "../../utils/index.js";
+
+const processingOrders = new Map();
 
 export const receiveOrder = async (data) => {
     try {
@@ -13,6 +16,23 @@ export const receiveOrder = async (data) => {
 
         if (data.side.toLowerCase() === "sell") data.side = "Sell";
         if (data.side.toLowerCase() === "buy") data.side = "Buy";
+
+        if (processingOrders.get(data.symbol)) {
+            await telegramChatsServices.sendMessage({
+                message: {
+                    title: `🚫 Order Rejected: Another order is being processed`,
+                    symbol: data.symbol,
+                    side: data.side,
+                    category: data.category,
+                    orderType: data.orderType,
+                    qty: data.qty,
+                },
+            });
+            return {
+                success: false,
+                message: "Another order is being processed for this symbol",
+            };
+        }
 
         await telegramChatsServices.sendMessage({
             message: {
@@ -47,11 +67,16 @@ export const receiveOrder = async (data) => {
         });
 
         throw new Error(err.message);
+    } finally {
+        // Always clear the processing flag
+        processingOrders.delete(data.symbol);
     }
 };
 
 const processOrder = async (data) => {
     try {
+        processingOrders.set(data.symbol, true);
+
         const sandbox = data.sandbox;
 
         if (data.qty === "0") {
@@ -204,6 +229,9 @@ const processOrder = async (data) => {
             success: false,
             message: err.message,
         };
+    } finally {
+        // Always clear the processing flag
+        processingOrders.delete(data.symbol);
     }
 };
 
@@ -226,7 +254,7 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
 //     orderType: "Market",
 //     qty: "0.4",
 //     sandbox: true,
-// });
+// }).then((res) => console.log(res));
 
 // processOrder({
 //     category: "linear",
@@ -235,7 +263,7 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
 //     orderType: "Market",
 //     qty: "0.466",
 //     sandbox: true,
-// });
+// }).then((res) => console.log(res));
 
 // const closePositionResult = await bybitPositionServices.closePosition({
 //     symbol: "SOLUSDT",
