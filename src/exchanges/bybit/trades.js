@@ -45,6 +45,10 @@ export const placeTrade = async ({
 
         const adjustedQty = await marketService.adjustQuantity({ desiredQty: qty, symbol });
 
+        let formattedQty = adjustedQty.toString();
+
+        if (reduceOnly) formattedQty = "0";
+
         const timestamp = Date.now();
 
         const orderParams = {
@@ -52,7 +56,7 @@ export const placeTrade = async ({
             symbol,
             side,
             orderType,
-            qty: adjustedQty.toString(),
+            qty: formattedQty,
             timeInForce,
             positionIdx,
             reduceOnly,
