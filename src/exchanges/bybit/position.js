@@ -148,3 +148,48 @@ export const closePosition = async ({ symbol, category = "linear", side, sandbox
         throw err;
     }
 };
+
+export const setLeverage = async ({ category = "linear", symbol, leverage = "1", sandbox = true }) => {
+    try {
+        const { baseUrl, apiKey, apiSecret } = configDetails(sandbox);
+        const url = `${baseUrl}/v5/position/set-leverage`;
+        const method = "POST";
+        const timestamp = Date.now();
+
+        const params = {
+            category,
+            symbol,
+            buyLeverage: leverage,
+            sellLeverage: leverage,
+        };
+
+        const signature = generateSignature({
+            data: params,
+            timestamp,
+            apiSecret,
+            apiKey,
+            sandbox,
+            method,
+        });
+
+        const headers = generateHeaders({ sandbox, signature, timestamp, apiKey });
+
+        const response = await axios({
+            method,
+            headers,
+            url,
+            data: params,
+        });
+
+        if (response.data.retCode !== 0) throw new Error(response.data.retMsg);
+
+        return {
+            success: true,
+            data: response.data.result,
+        };
+    } catch (err) {
+        console.error("Error setting leverage:", err);
+        throw err;
+    }
+};
+// setLeverage({ symbol: "SOLUSDT", leverage: "1", sandbox: true }).then((res) => console.log(res));

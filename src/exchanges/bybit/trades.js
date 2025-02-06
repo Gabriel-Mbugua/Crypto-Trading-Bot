@@ -13,7 +13,7 @@ export const placeTrade = async ({
     qty, // Order quantity as string
 
     // Optional parameters with common defaults
-    isLeverage = 0, // For spot trading: 0=spot, 1=margin
+    isLeverage, // For spot trading: 0=spot, 1=margin
     timeInForce = "GTC", // Default to Good Till Cancel
     positionIdx = 0, // 0=one-way, 1=hedge-buy, 2=hedge-sell
     orderLinkId = undefined, // Custom order ID
@@ -53,7 +53,6 @@ export const placeTrade = async ({
             side,
             orderType,
             qty: adjustedQty.toString(),
-            isLeverage: isLeverage ? 1 : 0,
             timeInForce,
             positionIdx,
             reduceOnly,

@@ -125,12 +125,6 @@ const processOrder = async (data) => {
             return { success: false, message: "Active position in the same direction" };
         }
 
-        // Initialize WebSocket
-        await bybitWebsocketServices.initializeWebsocket(sandbox);
-
-        // Wait for WebSocket to be ready
-        await bybitWebsocketServices.waitForWebsocketReady();
-
         // Check if there's an active position in the opposite direction
         // if so, close it before placing the new order
         if (oppositeSidePosition) {
@@ -161,6 +155,12 @@ const processOrder = async (data) => {
             console.info("Position closed successfully:", closePositionResult);
             return true;
         }
+
+        // Initialize WebSocket
+        await bybitWebsocketServices.initializeWebsocket(sandbox);
+
+        // Wait for WebSocket to be ready
+        await bybitWebsocketServices.waitForWebsocketReady();
 
         // Place the order
         const result = await bybitTradesServices.placeTrade({
