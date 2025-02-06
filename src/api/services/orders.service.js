@@ -116,6 +116,8 @@ const processOrder = async (data) => {
 
         const positions = positionsRef.data.list;
 
+        console.info(`There are ${positions.length} positions currently open for ${data.symbol}`);
+
         if (pendingOrders) {
             console.info("Pending orders found. Ignoring the new order.");
             await telegramChatsServices.sendMessage({
@@ -166,9 +168,11 @@ const processOrder = async (data) => {
                 sandbox,
             });
 
+            const remainingPositions = positions.length - 1;
+
             await telegramChatsServices.sendMessage({
                 message: {
-                    title: `🟡 Closing Position: Closed position in the opposite direction.`,
+                    title: `🟡 Closing Position: Current open positions: ${remainingPositions}`,
                     symbol: data.symbol,
                     side: oppositeSidePosition.side,
                     category: data.category,

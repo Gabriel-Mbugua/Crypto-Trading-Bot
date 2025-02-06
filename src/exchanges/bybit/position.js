@@ -141,7 +141,6 @@ export const closePosition = async ({ symbol, category = "linear", side, sandbox
             reduceOnly: true,
             sandbox,
         });
-        console.log("Position closed successfully:", result);
         return result;
     } catch (err) {
         console.error("Error closing position:", err);
