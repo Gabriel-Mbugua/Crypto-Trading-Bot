@@ -19,6 +19,11 @@ export const config = {
         testnetPrivateWebsocketUrl: "wss://stream-testnet.bybit.com/v5/private",
     },
     port: process.env.PORT || 3000,
+    redisConfig: {
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+        password: process.env.REDIS_PASSWORD,
+    },
     strategyConfigs: {
         trailingStop: 10,
     },
