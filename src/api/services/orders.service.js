@@ -145,7 +145,7 @@ const processOrder = async (data) => {
                 message: {
                     title: `🟡 Closing Position: Closed position in the opposite direction.`,
                     symbol: data.symbol,
-                    side: closingSide,
+                    side: oppositeSidePosition.side,
                     category: data.category,
                     orderType: data.orderType,
                     qty: data.qty,
@@ -224,7 +224,7 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
 //     postionSize: "0",
 //     side: "Buy",
 //     orderType: "Market",
-//     qty: "0.496",
+//     qty: "0.4",
 //     sandbox: true,
 // });
 
