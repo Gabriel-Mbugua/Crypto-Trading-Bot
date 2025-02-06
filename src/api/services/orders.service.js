@@ -157,10 +157,10 @@ const processOrder = async (data) => {
         }
 
         // Initialize WebSocket
-        await bybitWebsocketServices.initializeWebsocket(sandbox);
+        // await bybitWebsocketServices.initializeWebsocket(sandbox);
 
         // Wait for WebSocket to be ready
-        await bybitWebsocketServices.waitForWebsocketReady();
+        // await bybitWebsocketServices.waitForWebsocketReady();
 
         // Place the order
         const result = await bybitTradesServices.placeTrade({
