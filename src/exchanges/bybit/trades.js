@@ -87,6 +87,8 @@ export const placeTrade = async ({
 
         if (response.data.retCode !== 0) throw new Error(response.data.retMsg);
 
+        console.log("BYBIT-TRADES-90:", JSON.stringify(response.data));
+
         return {
             success: true,
             data: response.data.result,
