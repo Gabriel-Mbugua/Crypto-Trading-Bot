@@ -81,30 +81,6 @@ const processOrder = async (data) => {
     try {
         const sandbox = data.sandbox;
 
-        if (data.qty === "0") {
-            const closingSide = data.side === "Sell" ? "Buy" : "Sell";
-
-            await bybitPositionServices.closePosition({
-                category: data.category,
-                symbol: data.symbol,
-                side: closingSide,
-                sandbox,
-            });
-
-            await telegramChatsServices.sendMessage({
-                message: {
-                    title: `✅ Position Closed: Successfully closed the position.`,
-                    symbol: data.symbol,
-                    side: closingSide,
-                    category: data.category,
-                    orderType: data.orderType,
-                    qty: data.qty,
-                },
-            });
-
-            return true;
-        }
-
         const [positionsRef, pendingOrders] = await Promise.all([
             bybitPositionServices.getPositions({
                 symbol: data.symbol,

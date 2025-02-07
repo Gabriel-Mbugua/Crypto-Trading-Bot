@@ -343,6 +343,7 @@ export const checkPendingOrders = async ({ symbol, sandbox = true }) => {
 
     return pendingOrders.length > 0;
 };
+// checkPendingOrders({ symbol: "SOLUSDT", sandbox: false }).then((res) => console.log(res));
 
 export const getTradeHistory = async ({ category = "linear", orderId, symbol, sandbox = true }) => {
     try {
