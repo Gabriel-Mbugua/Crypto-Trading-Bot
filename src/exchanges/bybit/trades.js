@@ -201,7 +201,14 @@ export const cancelOrder = async ({ category = "linear", symbol, orderId, sandbo
 //     sandbox: true,
 // }).then((res) => console.log(res));
 
-export const getOpenClosedOrders = async ({ category = "linear", openOnly, baseCoin, symbol, sandbox = true }) => {
+export const getOpenClosedOrders = async ({
+    category = "linear",
+    orderId,
+    openOnly,
+    baseCoin,
+    symbol,
+    sandbox = true,
+}) => {
     try {
         const { baseUrl, apiKey, apiSecret } = configDetails(sandbox);
 
@@ -212,6 +219,7 @@ export const getOpenClosedOrders = async ({ category = "linear", openOnly, baseC
         const params = { category };
 
         if (symbol) params.symbol = symbol;
+        if (orderId) params.orderId = orderId;
         if (openOnly) params.openOnly = openOnly;
         if (baseCoin) params.baseCoin = baseCoin;
 
@@ -247,7 +255,9 @@ export const getOpenClosedOrders = async ({ category = "linear", openOnly, baseC
         throw new Error(err.message);
     }
 };
-// getOpenClosedOrders({ symbol: "SOLUSDT" }).then((res) => console.log(JSON.stringify(res)));
+// getOpenClosedOrders({ orderId: "44b4ba33-596e-4659-982f-667afd40f94a" }).then((res) =>
+// console.log(JSON.stringify(res))
+// );
 // getOpenClosedOrders({ symbol: "SOLUSDT", sandbox: false }).then((res) => console.log(JSON.stringify(res)));
 
 export const getOrder = async ({ orderId, symbol, side, sandbox = true }) => {
@@ -273,6 +283,7 @@ export const getOrder = async ({ orderId, symbol, side, sandbox = true }) => {
     }
 };
 // getOrder({ symbol: "SOLUSDT", side: "Buy" }).then((res) => console.log(res));
+// getOrder({ orderId: "c1da1ae1-79c5-4a0d-8b8a-7527948cfda2", symbol: "SOLUSDT" }).then((res) => console.log(res));
 
 export const cancelAllOrders = async ({ category = "linear", symbol, sandbox = true }) => {
     try {
@@ -332,3 +343,50 @@ export const checkPendingOrders = async ({ symbol, sandbox = true }) => {
 
     return pendingOrders.length > 0;
 };
+
+export const getTradeHistory = async ({ category = "linear", orderId, symbol, sandbox = true }) => {
+    try {
+        const { baseUrl, apiKey, apiSecret } = configDetails(sandbox);
+
+        const method = "GET";
+        const url = `${baseUrl}/v5/execution/list`;
+        const timestamp = Date.now();
+
+        const params = { category };
+
+        if (symbol) params.symbol = symbol;
+        if (orderId) params.orderId = orderId;
+
+        const cleanOrderParams = commonUtils.cleanAndSortData(params);
+
+        const signature = generateSignature({
+            data: cleanOrderParams,
+            timestamp,
+            sandbox,
+            apiKey,
+            apiSecret,
+            method,
+        });
+        const headers = generateHeaders({ sandbox, signature, timestamp, apiKey });
+
+        const options = {
+            method,
+            headers,
+            url,
+            params,
+        };
+
+        const response = await axios(options);
+
+        if (response.data.retCode !== 0) throw new Error(response.data.retMsg);
+
+        return {
+            success: true,
+            data: response.data.result,
+        };
+    } catch (error) {
+        console.error(error?.response?.data || error.message);
+        throw new Error(error.message);
+    }
+};
+// getTradeHistory({ orderId: "44b4ba33-596e-4659-982f-667afd40f94a" }).then((res) => console.log(res));

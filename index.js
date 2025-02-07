@@ -5,6 +5,8 @@ import helmet from "helmet";
 import apiRouter from "./src/api/routes/index.js";
 import { config } from "./src/config.js";
 import axios from "axios";
+import { redisConnection } from "./src/redis/index.js";
+import { telegramChatsServices } from "./src/telegram/index.js";
 
 const port = config.port;
 
@@ -40,6 +42,23 @@ app.get("/health", (req, res) => {
     res.status(200).send("OK");
 });
 
-app.listen(port, "0.0.0.0", () => {
-    console.log(`Server is running on port ${port}`);
-});
+const startServer = async () => {
+    try {
+        await redisConnection.createRedisClient();
+
+        app.listen(port, "0.0.0.0", () => {
+            console.log(`Server is running on port ${port}`);
+        });
+    } catch (error) {
+        console.error(`[E-SERVER-101] Failed to start server:`, error);
+        await telegramChatsServices.sendMessage({
+            message: {
+                title: `❌ Server Failed: Failed to start server.`,
+                error: error.message,
+            },
+        });
+        process.exit(1);
+    }
+};
+
+startServer();

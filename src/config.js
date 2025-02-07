@@ -20,9 +20,8 @@ export const config = {
     },
     port: process.env.PORT || 3000,
     redisConfig: {
-        host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT,
-        password: process.env.REDIS_PASSWORD,
+        defaultExpirationInSeconds: 10,
+        connectionUrl: process.env.REDIS_CONNECTION_URL,
     },
     strategyConfigs: {
         trailingStop: 10,

@@ -1,13 +1,19 @@
 import { bybitTradesServices, bybitPositionServices, bybitWebsocketServices } from "../../exchanges/bybit/index.js";
+import { redisFunctions } from "../../redis/index.js";
 import { telegramChatsServices } from "../../telegram/index.js";
 import { sleep } from "../../utils/common.utils.js";
 import { commonUtils } from "../../utils/index.js";
 
-const orderQueues = new Map();
-
 export const receiveOrder = async (data) => {
     try {
         console.info("L-ORDERS-5", JSON.stringify(data));
+
+        const setLock = await redisFunctions.setLock({
+            lockKey: `${data.symbol}-${data.side}`,
+            lockPeriod: 10,
+        });
+
+        if (!setLock) return { success: true, message: "Order is already being processed" };
 
         const sandbox = data.sandbox === "true";
 
@@ -17,40 +23,20 @@ export const receiveOrder = async (data) => {
         if (data.side.toLowerCase() === "sell") data.side = "Sell";
         if (data.side.toLowerCase() === "buy") data.side = "Buy";
 
-        if (!orderQueues.has(data.symbol)) {
-            orderQueues.set(data.symbol, []);
-        }
-        const queue = orderQueues.get(data.symbol);
+        const environment = sandbox ? "Sandbox" : "Production";
 
-        // Add the processing function to the queue.  This is a *non-blocking* operation.
-        queue.push(async () => {
-            try {
-                await telegramChatsServices.sendMessage({
-                    message: {
-                        title: `🔄 Order Received.`, // This message is now truly "received"
-                        symbol: data.symbol,
-                        side: data.side,
-                        category: data.category,
-                        orderType: data.orderType,
-                        qty: data.qty,
-                    },
-                });
-                await processOrder(data); // Await processOrder *within the queued function*
-                //Success message is sent inside processOrder
-            } catch (err) {
-                //Handle errors and send messages from processOrder
-                console.error("Error in queued processOrder:", err);
-            } finally {
-                // Remove this task from the queue and process the next one.
-                queue.shift();
-                if (queue.length > 0) {
-                    queue[0](); // Immediately start the next task.
-                }
-            }
+        await telegramChatsServices.sendMessage({
+            message: {
+                title: `🔄 ${environment} Order Received.`, // This message is now truly "received"
+                symbol: data.symbol,
+                side: data.side,
+                category: data.category,
+                orderType: data.orderType,
+                qty: data.qty,
+            },
         });
 
-        // If this is the only task in the queue, start it immediately.
-        if (queue.length === 1) queue[0](); // This starts the processing *without* blocking receiveOrder.
+        processOrder(data);
 
         return {
             success: true,
@@ -75,6 +61,22 @@ export const receiveOrder = async (data) => {
     }
 };
 
+// receiveOrder({
+//     category: "linear",
+//     symbol: "SOLUSDT",
+//     side: "Buy",
+//     orderType: "Market",
+//     qty: "0.4",
+//     sandbox: true,
+// }).then((res) => console.log(res));
+// receiveOrder({
+//     category: "linear",
+//     symbol: "SOLUSDT",
+//     side: "Buy",
+//     orderType: "Market",
+//     qty: "0.4",
+//     sandbox: true,
+// }).then((res) => console.log(res));
 const processOrder = async (data) => {
     try {
         const sandbox = data.sandbox;
@@ -170,7 +172,7 @@ const processOrder = async (data) => {
 
             const remainingPositions = positions.length - 1;
 
-            const realizedPnl = parseFloat(oppositeSidePosition.curRealisedPnl);
+            const realizedPnl = parseFloat(oppositeSidePosition.unrealisedPnl);
             const pnlEmoji = realizedPnl > 0 ? "✅ Profit" : realizedPnl < 0 ? "❌ Loss" : "➖ Breakeven";
             const formattedPnl = realizedPnl.toFixed(2);
 
