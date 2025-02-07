@@ -42,6 +42,12 @@ const markDownFormatter = (message) => {
     if (message.qty) formattedMessage += `*Quantity*: \`${escapeMarkdownV2(message.qty)}\`\n`;
     if (message.error) formattedMessage += `*Error*: \`${escapeMarkdownV2(message.error.message)}\`\n`;
     if (message.rejectReason) formattedMessage += `*Reject Reason*: \`${escapeMarkdownV2(message.rejectReason)}\`\n`;
+    if (message.avgEntryPrice) formattedMessage += `*Entry Price*: \`${escapeMarkdownV2(message.avgEntryPrice)}\`\n`;
+    if (message.avgExitPrice) formattedMessage += `*Exit Price*: \`${escapeMarkdownV2(message.avgExitPrice)}\`\n`;
+    if (message.realizedPnl)
+        formattedMessage += `*Total ${message.symbol} PNL *: \`${escapeMarkdownV2(message.realizedPnl)}\`\n`;
+    if (message.leverage) formattedMessage += `*Leverage*: \`${escapeMarkdownV2(message.leverage)}\`\n`;
+    if (message.note) formattedMessage += `*Note*: \`${escapeMarkdownV2(message.note)}\`\n`;
 
     return formattedMessage;
 };

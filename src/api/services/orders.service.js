@@ -170,14 +170,23 @@ const processOrder = async (data) => {
 
             const remainingPositions = positions.length - 1;
 
+            const realizedPnl = parseFloat(oppositeSidePosition.curRealisedPnl);
+            const pnlEmoji = realizedPnl > 0 ? "✅ Profit" : realizedPnl < 0 ? "❌ Loss" : "➖ Breakeven";
+            const formattedPnl = realizedPnl.toFixed(2);
+
             await telegramChatsServices.sendMessage({
                 message: {
-                    title: `🟡 Closing Position: Current open positions: ${remainingPositions}`,
+                    title: `${pnlEmoji} Position Closed: ${data.symbol} ${oppositeSidePosition.side}`,
                     symbol: data.symbol,
                     side: oppositeSidePosition.side,
                     category: data.category,
                     orderType: data.orderType,
                     qty: data.qty,
+                    avgEntryPrice: oppositeSidePosition.avgPrice, // Entry price from original position data
+                    avgExitPrice: oppositeSidePosition.markPrice, // Assume exit price is returned in closePositionResult
+                    realizedPnl: `${formattedPnl} USDT`, // Show PNL with currency
+                    leverage: data.leverage, // Show leverage used
+                    note: `Current Open Positions: ${remainingPositions}`, // Keep track of remaining positions
                 },
             });
 
