@@ -9,7 +9,7 @@ export const receiveOrder = async (data) => {
         console.info("L-ORDERS-5", JSON.stringify(data));
 
         const setLock = await redisFunctions.setLock({
-            lockKey: `${data.symbol}-${data.side}`,
+            lockKey: `${data.symbol.toLowerCase()}-${data.side.toLowerCase()}`,
             lockPeriod: 10,
         });
 
@@ -238,10 +238,10 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
 //     category: "linear",
 //     symbol: "SOLUSDT",
 //     postionSize: "0",
-//     side: "Buy",
+//     side: "Sell",
 //     orderType: "Market",
-//     qty: "0.4",
-//     sandbox: true,
+//     qty: "0.01",
+//     sandbox: false,
 // }).then((res) => console.log(res));
 
 // processOrder({
