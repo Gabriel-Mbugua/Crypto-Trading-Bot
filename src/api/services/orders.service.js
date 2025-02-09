@@ -15,6 +15,7 @@ export const receiveOrder = async (data) => {
 
         if (!setLock) return { success: true, message: "Order is already being processed" };
 
+        data.sandbox = false;
         const sandbox = data.sandbox === "true";
 
         data.symbol = data.symbol.replace(".P", "");
