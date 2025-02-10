@@ -7,6 +7,7 @@ import { config } from "./src/config.js";
 import axios from "axios";
 import { redisConnection } from "./src/redis/index.js";
 import { telegramChatsServices } from "./src/telegram/index.js";
+import { loggerMiddleware } from "./src/middleware/index.js";
 
 const port = config.port;
 
@@ -16,10 +17,7 @@ app.use(cors({ origin: true }));
 
 app.use(express.json({ limit: "1mb" }));
 
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`, req.body);
-    next();
-});
+app.use(loggerMiddleware.createLogger());
 
 app.use(helmet());
 
