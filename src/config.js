@@ -18,6 +18,7 @@ export const config = {
         testnetTradeWebsocketUrl: "wss://stream-testnet.bybit.com/v5/trade",
         testnetPrivateWebsocketUrl: "wss://stream-testnet.bybit.com/v5/private",
     },
+    nodeEnv: process.env.NODE_ENV || "development",
     port: process.env.PORT || 3000,
     redisConfig: {
         defaultExpirationInSeconds: 10,
@@ -27,7 +28,7 @@ export const config = {
         trailingStop: 10,
     },
     telegram: {
-        chatId: "-1002396574718",
+        chatId: process.env.TELEGRAM_CHAT_ID,
         baseUrl: "https://api.telegram.org/bot",
         botToken: process.env.TELEGRAM_BOT_TOKEN,
     },

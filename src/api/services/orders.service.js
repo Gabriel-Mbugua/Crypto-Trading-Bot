@@ -1,8 +1,7 @@
+import { config } from "../../config.js";
 import { bybitTradesServices, bybitPositionServices, bybitWebsocketServices } from "../../exchanges/bybit/index.js";
 import { redisFunctions } from "../../redis/index.js";
 import { telegramChatsServices } from "../../telegram/index.js";
-import { sleep } from "../../utils/common.utils.js";
-import { commonUtils } from "../../utils/index.js";
 
 export const receiveOrder = async (data) => {
     try {
@@ -15,8 +14,7 @@ export const receiveOrder = async (data) => {
 
         if (!setLock) return { success: true, message: "Order is already being processed" };
 
-        data.sandbox = false;
-        const sandbox = data.sandbox === "true";
+        const sandbox = config.nodeEnv === "development";
 
         data.symbol = data.symbol.replace(".P", "");
         data.sandbox = sandbox;
