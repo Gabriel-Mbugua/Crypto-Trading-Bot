@@ -42,20 +42,22 @@ TELEGRAM_CHAT_ID=your_telegram_chat_id
 
 ## Project Structure
 
+```
 .
 ├── index.js
 ├── src/
-│ ├── api/
-│ │ ├── controllers/
-│ │ ├── routes/
-│ │ └── services/
-│ ├── exchanges/
-│ │ └── bybit/
-│ ├── middleware/
-│ ├── redis/
-│ ├── strategies/
-│ ├── telegram/
-│ └── utils/
+│   ├── api/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   └── services/
+│   ├── exchanges/
+│   │   └── bybit/
+│   ├── middleware/
+│   ├── redis/
+│   ├── strategies/
+│   ├── telegram/
+│   └── utils/
+```
 
 ## Installation
 
