@@ -1,39 +1,33 @@
 import axios from "axios";
-
 import { configDetails, generateHeaders, generateSignature } from "./common.js";
-import { commonUtils } from "../../utils/index.js";
 
-export const getBalance = async ({ coin, sandbox = true }) => {
+export const getTickers = async ({ category = "linear", symbol, sandbox = true }) => {
     try {
         const { baseUrl, apiKey, apiSecret } = configDetails(sandbox);
 
         const method = "GET";
-        const url = `${baseUrl}/v5/account/wallet-balance`;
-
-        const params = { accountType: "UNIFIED" };
-
-        if (coin) params.coin = coin;
-
         const timestamp = Date.now();
+        const url = `${baseUrl}/v5/market/tickers`;
 
-        const cleanOrderParams = commonUtils.cleanAndSortData(params);
+        const params = { category };
+
+        if (symbol) params.symbol = symbol;
 
         const signature = generateSignature({
-            data: cleanOrderParams,
+            data: params,
             timestamp,
-            sandbox,
-            apiKey,
             apiSecret,
+            apiKey,
+            sandbox,
             method,
         });
-
         const headers = generateHeaders({ sandbox, signature, timestamp, apiKey });
 
         const options = {
-            method,
+            method: "GET",
             headers,
             url,
-            params: cleanOrderParams,
+            params,
         };
 
         const response = await axios(options);
@@ -42,12 +36,12 @@ export const getBalance = async ({ coin, sandbox = true }) => {
 
         return {
             success: true,
-            data: response.data.result.list,
+            data: response.data.result,
         };
     } catch (err) {
-        console.log(err?.response?.data || err.message);
-        if (err instanceof Error) throw err;
+        console.error(err?.response?.data || err.message);
         throw new Error(err.message);
     }
 };
-// getBalance({ sandbox: false }).then((res) => console.log(JSON.stringify(res)));
+
+// getTickers({ symbol: "SOLUSDT", sandbox: true }).then((res) => console.log(JSON.stringify(res)));

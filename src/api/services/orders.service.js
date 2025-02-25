@@ -1,5 +1,11 @@
 import { config } from "../../config.js";
-import { bybitTradesServices, bybitPositionServices, bybitWebsocketServices } from "../../exchanges/bybit/index.js";
+import {
+    bybitTradesServices,
+    bybitPositionServices,
+    bybitWebsocketServices,
+    bybitAccountsServices,
+    bybitMarketServices,
+} from "../../exchanges/bybit/index.js";
 import { redisFunctions } from "../../redis/index.js";
 import { telegramChatsServices } from "../../telegram/index.js";
 
@@ -76,11 +82,12 @@ export const receiveOrder = async (data) => {
 //     qty: "0.4",
 //     sandbox: true,
 // }).then((res) => console.log(res));
+
 const processOrder = async (data) => {
     try {
         const sandbox = data.sandbox;
 
-        const [positionsRef, pendingOrders] = await Promise.all([
+        const [positionsRef, pendingOrders, balanceInfo, ticker] = await Promise.all([
             bybitPositionServices.getPositions({
                 symbol: data.symbol,
                 sandbox,
@@ -89,9 +96,18 @@ const processOrder = async (data) => {
                 symbol: data.symbol,
                 sandbox,
             }),
+            bybitAccountsServices.getBalance({ sandbox }),
+            bybitMarketServices.getTickers({
+                symbol: data.symbol,
+                sandbox,
+            }),
         ]);
 
         const positions = positionsRef.data.list;
+        const currentPrice = parseFloat(ticker.data.list[0].lastPrice);
+        const availableBalance = parseFloat(balanceInfo.data[0].totalEquity);
+
+        console.info(`Current price: ${currentPrice}, Available balance: ${availableBalance} USDT`);
 
         console.info(`There are ${positions.length} positions currently open for ${data.symbol}`);
 
@@ -171,6 +187,21 @@ const processOrder = async (data) => {
             return true;
         }
 
+        let orderQty = data.qty;
+
+        const requestedPositionValue = parseFloat(data.qty) * currentPrice;
+        const leverage = parseFloat(data.leverage || 1);
+
+        if (requestedPositionValue > availableBalance) {
+            const safetyFactor = 0.95; // Use 95% of available margin as safety buffer
+            const maxMargin = availableBalance * safetyFactor;
+            const maxPositionValue = maxMargin * leverage;
+            const maxPositionSize = maxPositionValue / currentPrice;
+
+            // Ensure order doesn't exceed available margin
+            orderQty = Math.min(parseFloat(data.qty), maxPositionSize);
+        }
+
         // Initialize WebSocket
         // await bybitWebsocketServices.initializeWebsocket(sandbox);
 
@@ -183,7 +214,8 @@ const processOrder = async (data) => {
             symbol: data.symbol,
             side: data.side,
             orderType: data.orderType,
-            qty: data.qty,
+            qty: orderQty,
+            leverage,
             sandbox,
         });
 
@@ -237,10 +269,10 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
 //     category: "linear",
 //     symbol: "SOLUSDT",
 //     postionSize: "0",
-//     side: "Sell",
+//     side: "Buy",
 //     orderType: "Market",
-//     qty: "0.01",
-//     sandbox: false,
+//     qty: "0.1",
+//     sandbox: true,
 // }).then((res) => console.log(res));
 
 // processOrder({

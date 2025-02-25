@@ -51,20 +51,30 @@ export const tokenMarketInfo = async ({ category = "linear", symbol, sandbox = t
 
 export const adjustQuantity = async ({ desiredQty, symbol }) => {
     const marketInfo = await tokenMarketInfo({ symbol });
+    const tokenInfo = marketInfo.data.list.find((item) => item.symbol === symbol);
 
-    const qtyStep = marketInfo.data.list.find((item) => item.symbol === symbol).lotSizeFilter.qtyStep;
-    const minOrderQty = marketInfo.data.list.find((item) => item.symbol === symbol).lotSizeFilter.minOrderQty;
-    const maxOrderQty = marketInfo.data.list.find((item) => item.symbol === symbol).lotSizeFilter.maxOrderQty;
+    const qtyStep = parseFloat(tokenInfo.lotSizeFilter.qtyStep);
+    const minOrderQty = parseFloat(tokenInfo.lotSizeFilter.minOrderQty);
+    const maxOrderQty = parseFloat(tokenInfo.lotSizeFilter.maxOrderQty);
 
-    const adjustedQty = Math.floor(desiredQty / qtyStep) * qtyStep;
+    // Convert desiredQty to number if it's a string
+    const qty = typeof desiredQty === "string" ? parseFloat(desiredQty) : desiredQty;
+
+    // Use toFixed to handle decimal precision based on qtyStep
+    const precision = qtyStep.toString().includes(".") ? qtyStep.toString().split(".")[1].length : 0;
+
+    // Calculate the adjusted quantity with proper precision
+    const adjustedQty = Math.floor(qty / qtyStep) * qtyStep;
+    const formattedQty = parseFloat(adjustedQty.toFixed(precision));
 
     // Ensure the adjusted quantity is within the allowed range
-    if (adjustedQty < minOrderQty) {
+    if (formattedQty < minOrderQty) {
         return minOrderQty;
-    } else if (adjustedQty > maxOrderQty) {
+    } else if (formattedQty > maxOrderQty) {
         return maxOrderQty;
     } else {
-        return adjustedQty;
+        return formattedQty;
     }
 };
 // adjustQuantity({ desiredQty: "0.466", symbol: "SOLUSDT" }).then((res) => console.log(res));
+// adjustQuantity({ desiredQty: "0.3124536778", symbol: "SOLUSDT" }).then((res) => console.log(res));

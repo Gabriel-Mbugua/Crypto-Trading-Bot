@@ -1,5 +1,5 @@
 import axios from "axios";
-
+import moment from "moment";
 import { configDetails, generateHeaders, generateSignature } from "./common.js";
 import { commonUtils } from "../../utils/index.js";
 import { marketService } from "../../api/services/index.js";
@@ -256,8 +256,7 @@ export const getOpenClosedOrders = async ({
     }
 };
 // getOpenClosedOrders({ orderId: "44b4ba33-596e-4659-982f-667afd40f94a" }).then((res) =>
-// console.log(JSON.stringify(res))
-// );
+// getOpenClosedOrders({ symbol: "SOLUSDT", sandbox: false }).then((res) => console.log(JSON.stringify(res)));
 // getOpenClosedOrders({ symbol: "SOLUSDT", sandbox: false }).then((res) => console.log(JSON.stringify(res)));
 
 export const getOrder = async ({ orderId, symbol, side, sandbox = true }) => {
@@ -391,3 +390,78 @@ export const getTradeHistory = async ({ category = "linear", orderId, symbol, sa
     }
 };
 // getTradeHistory({ orderId: "44b4ba33-596e-4659-982f-667afd40f94a" }).then((res) => console.log(res));
+
+export const getOrderHistory = async ({
+    category = "linear",
+    symbol,
+    orderId,
+    orderStatus,
+    startTime,
+    endTime,
+    sandbox = true,
+}) => {
+    try {
+        const { baseUrl, apiKey, apiSecret } = configDetails(sandbox);
+
+        const orders = [];
+        let cursor;
+        const method = "GET";
+        const url = `${baseUrl}/v5/order/history`;
+        const timestamp = Date.now();
+
+        const params = { category };
+
+        if (symbol) params.symbol = symbol;
+        if (orderId) params.orderId = orderId;
+        if (orderStatus) params.orderStatus = orderStatus;
+        if (startTime) params.startTime = moment(startTime).valueOf();
+        if (endTime) params.endTime = moment(endTime).valueOf();
+
+        while (true) {
+            if (cursor) params.cursor = cursor;
+
+            const cleanOrderParams = commonUtils.cleanAndSortData(params);
+
+            const signature = generateSignature({
+                data: cleanOrderParams,
+                timestamp,
+                sandbox,
+                apiKey,
+                apiSecret,
+                method,
+            });
+            const headers = generateHeaders({ sandbox, signature, timestamp, apiKey });
+
+            const options = {
+                method,
+                headers,
+                url,
+                params,
+            };
+
+            const response = await axios(options);
+
+            if (response.data.retCode !== 0) throw new Error(response.data.retMsg);
+
+            cursor = response.data.result.nextPageCursor || null;
+
+            orders.push(...response.data.result.list);
+
+            if (!cursor) break;
+        }
+
+        return {
+            success: true,
+            data: orders,
+        };
+    } catch (err) {
+        console.error(err?.response?.data || err.message);
+        throw new Error(err.message);
+    }
+};
+// getOrderHistory({
+//     symbol: "SOLUSDT",
+//     endTime: "2025-02-07",
+//     startTime: "2025-02-14",
+//     sandbox: false,
+// }).then((res) => console.log(res.data));
