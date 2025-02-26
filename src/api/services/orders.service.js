@@ -85,9 +85,11 @@ export const receiveOrder = async (data) => {
 
 const processOrder = async (data) => {
     try {
+        const startTime = Date.now();
+        const executionTmeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
         const sandbox = data.sandbox;
 
-        const [positionsRef, pendingOrders, balanceInfo, ticker] = await Promise.all([
+        const [positionsRef, pendingOrders, balanceInfo, ticker, liquidation] = await Promise.all([
             bybitPositionServices.getPositions({
                 symbol: data.symbol,
                 sandbox,
@@ -101,6 +103,7 @@ const processOrder = async (data) => {
                 symbol: data.symbol,
                 sandbox,
             }),
+            bybitTradesServices.checkForLiquidation({ symbol: data.symbol, sandbox }),
         ]);
 
         const positions = positionsRef.data.list;
@@ -166,6 +169,7 @@ const processOrder = async (data) => {
             const realizedPnl = parseFloat(oppositeSidePosition.unrealisedPnl);
             const pnlEmoji = realizedPnl > 0 ? "✅ Profit" : realizedPnl < 0 ? "❌ Loss" : "➖ Breakeven";
             const formattedPnl = realizedPnl.toFixed(2);
+            const executionTimeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
 
             await telegramChatsServices.sendMessage({
                 message: {
@@ -179,6 +183,7 @@ const processOrder = async (data) => {
                     avgExitPrice: oppositeSidePosition.markPrice, // Assume exit price is returned in closePositionResult
                     realizedPnl: `${formattedPnl} USDT`, // Show PNL with currency
                     leverage: data.leverage, // Show leverage used
+                    executionTime: executionTimeInSeconds,
                     note: `Current Open Positions: ${remainingPositions}`, // Keep track of remaining positions
                 },
             });
@@ -219,6 +224,8 @@ const processOrder = async (data) => {
             sandbox,
         });
 
+        const executionTimeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
+
         await telegramChatsServices.sendMessage({
             message: {
                 title: `✅ Order Placed: Successfully placed a new order.`,
@@ -227,6 +234,8 @@ const processOrder = async (data) => {
                 category: data.category,
                 orderType: data.orderType,
                 qty: data.qty,
+                currentPrice,
+                executionTime: executionTimeInSeconds,
             },
         });
         console.info("Order placed successfully:", result);
@@ -269,7 +278,7 @@ export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
 //     category: "linear",
 //     symbol: "SOLUSDT",
 //     postionSize: "0",
-//     side: "Buy",
+//     side: "Sell",
 //     orderType: "Market",
 //     qty: "0.1",
 //     sandbox: true,

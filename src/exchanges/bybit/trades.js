@@ -344,7 +344,7 @@ export const checkPendingOrders = async ({ symbol, sandbox = true }) => {
 };
 // checkPendingOrders({ symbol: "SOLUSDT", sandbox: false }).then((res) => console.log(res));
 
-export const getTradeHistory = async ({ category = "linear", orderId, symbol, sandbox = true }) => {
+export const getTradeHistory = async ({ category = "linear", orderId, startTime, endTime, symbol, sandbox = true }) => {
     try {
         const { baseUrl, apiKey, apiSecret } = configDetails(sandbox);
 
@@ -356,6 +356,8 @@ export const getTradeHistory = async ({ category = "linear", orderId, symbol, sa
 
         if (symbol) params.symbol = symbol;
         if (orderId) params.orderId = orderId;
+        if (startTime) params.startTime = moment(startTime).valueOf();
+        if (endTime) params.endTime = moment(endTime).valueOf();
 
         const cleanOrderParams = commonUtils.cleanAndSortData(params);
 
@@ -390,6 +392,9 @@ export const getTradeHistory = async ({ category = "linear", orderId, symbol, sa
     }
 };
 // getTradeHistory({ orderId: "44b4ba33-596e-4659-982f-667afd40f94a" }).then((res) => console.log(res));
+// getTradeHistory({ symbol: "SOLUSDT", sandbox: false, startTime: "2025-02-16", endTime: "2025-02-18" }).then((res) =>
+//     console.log(JSON.stringify(res))
+// );
 
 export const getOrderHistory = async ({
     category = "linear",
@@ -403,8 +408,6 @@ export const getOrderHistory = async ({
     try {
         const { baseUrl, apiKey, apiSecret } = configDetails(sandbox);
 
-        const orders = [];
-        let cursor;
         const method = "GET";
         const url = `${baseUrl}/v5/order/history`;
         const timestamp = Date.now();
@@ -416,43 +419,32 @@ export const getOrderHistory = async ({
         if (orderStatus) params.orderStatus = orderStatus;
         if (startTime) params.startTime = moment(startTime).valueOf();
         if (endTime) params.endTime = moment(endTime).valueOf();
+        const cleanOrderParams = commonUtils.cleanAndSortData(params);
 
-        while (true) {
-            if (cursor) params.cursor = cursor;
+        const signature = generateSignature({
+            data: cleanOrderParams,
+            timestamp,
+            sandbox,
+            apiKey,
+            apiSecret,
+            method,
+        });
+        const headers = generateHeaders({ sandbox, signature, timestamp, apiKey });
 
-            const cleanOrderParams = commonUtils.cleanAndSortData(params);
+        const options = {
+            method,
+            headers,
+            url,
+            params,
+        };
 
-            const signature = generateSignature({
-                data: cleanOrderParams,
-                timestamp,
-                sandbox,
-                apiKey,
-                apiSecret,
-                method,
-            });
-            const headers = generateHeaders({ sandbox, signature, timestamp, apiKey });
+        const response = await axios(options);
 
-            const options = {
-                method,
-                headers,
-                url,
-                params,
-            };
-
-            const response = await axios(options);
-
-            if (response.data.retCode !== 0) throw new Error(response.data.retMsg);
-
-            cursor = response.data.result.nextPageCursor || null;
-
-            orders.push(...response.data.result.list);
-
-            if (!cursor) break;
-        }
+        if (response.data.retCode !== 0) throw new Error(response.data.retMsg);
 
         return {
             success: true,
-            data: orders,
+            data: response.data.result.list,
         };
     } catch (err) {
         console.error(err?.response?.data || err.message);
@@ -461,7 +453,34 @@ export const getOrderHistory = async ({
 };
 // getOrderHistory({
 //     symbol: "SOLUSDT",
-//     endTime: "2025-02-07",
-//     startTime: "2025-02-14",
 //     sandbox: false,
 // }).then((res) => console.log(res.data));
+
+export const checkForLiquidation = async ({ symbol, sandbox = true }) => {
+    try {
+        const tradeHistoryRef = await getTradeHistory({
+            symbol,
+            sandbox,
+            startTime: "2025-02-16",
+            endTime: "2025-02-18",
+        });
+
+        if (!tradeHistoryRef.success) return null;
+
+        const tradeHistory = tradeHistoryRef.data;
+
+        const liquidationExecTypes = ["BustTrade", "AdlTrade"];
+        const liquidationCreateTypes = ["CreateByLiq", "CreateByTakeOver_PassThrough", "CreateByAdl_PassThrough"];
+
+        const lastTrade = tradeHistory.list[0];
+
+        if (liquidationExecTypes.includes(lastTrade.execType) || liquidationCreateTypes.includes(lastTrade.createType))
+            return lastTrade;
+
+        return null;
+    } catch (err) {
+        console.error(err?.response?.data || err.message);
+        throw new Error(err.message);
+    }
+};
+// checkForLiquidation({ symbol: "SOLUSDT", sandbox: false }).then((res) => console.log(res));
