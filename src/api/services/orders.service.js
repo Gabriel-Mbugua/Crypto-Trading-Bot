@@ -1,4 +1,5 @@
 import { config } from "../../config.js";
+import Query from "../../database/query.builder.js";
 import {
     bybitTradesServices,
     bybitPositionServices,
@@ -30,6 +31,8 @@ export const receiveOrder = async (data) => {
 
         const environment = sandbox ? "Sandbox" : "Production";
 
+        data.environment = environment;
+
         await telegramChatsServices.sendMessage({
             message: {
                 title: `🔄 ${environment} Order Received.`, // This message is now truly "received"
@@ -40,6 +43,21 @@ export const receiveOrder = async (data) => {
                 qty: data.qty,
             },
         });
+
+        const orderRef = await Query.insert({
+            table: "orders",
+            data: {
+                symbol: data.symbol,
+                side: data.side,
+                category: data.category,
+                type: data.orderType,
+                quantity: data.qty,
+                environment,
+            },
+        });
+        const { id } = orderRef.rows[0];
+
+        data.orderId = id;
 
         processOrder(data);
 
@@ -89,7 +107,7 @@ const processOrder = async (data) => {
         const executionTmeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
         const sandbox = data.sandbox;
 
-        const [positionsRef, pendingOrders, balanceInfo, ticker, liquidation] = await Promise.all([
+        const [positionsRef, pendingOrders, balanceInfo, ticker, ordersRef] = await Promise.all([
             bybitPositionServices.getPositions({
                 symbol: data.symbol,
                 sandbox,
@@ -103,12 +121,18 @@ const processOrder = async (data) => {
                 symbol: data.symbol,
                 sandbox,
             }),
-            bybitTradesServices.checkForLiquidation({ symbol: data.symbol, sandbox }),
+            Query.find({
+                table: "orders",
+                criteria: { symbol: data.symbol },
+                orderBy: "created_at DESC",
+                limit: 2,
+            }),
         ]);
 
         const positions = positionsRef.data.list;
         const currentPrice = parseFloat(ticker.data.list[0].lastPrice);
         const availableBalance = parseFloat(balanceInfo.data[0].totalEquity);
+        const previousOrder = ordersRef.rows[1];
 
         console.info(`Current price: ${currentPrice}, Available balance: ${availableBalance} USDT`);
 
@@ -188,6 +212,19 @@ const processOrder = async (data) => {
                 },
             });
 
+            await Query.update({
+                table: "orders",
+                id: data.orderId,
+                data: {
+                    action: "exit",
+                    entry_price: oppositeSidePosition.avgPrice,
+                    exit_price: oppositeSidePosition.markPrice,
+                    realized_pnl: formattedPnl,
+                    leverage: data.leverage,
+                    execution_time: executionTimeInSeconds,
+                },
+            });
+
             console.info("Position closed successfully:", closePositionResult);
             return true;
         }
@@ -207,12 +244,28 @@ const processOrder = async (data) => {
             orderQty = Math.min(parseFloat(data.qty), maxPositionSize);
         }
 
-        // Initialize WebSocket
-        // await bybitWebsocketServices.initializeWebsocket(sandbox);
+        if (previousOrder?.action === "entry" && positions.length < 1) {
+            console.info("An active position was closed. Skip this false entry signal.");
+            await telegramChatsServices.sendMessage({
+                message: {
+                    title: `🚫Ignored Order.: Active position was closed.`,
+                },
+            });
 
-        // Wait for WebSocket to be ready
-        // await bybitWebsocketServices.waitForWebsocketReady();
-
+            await Query.update({
+                table: "orders",
+                id: data.orderId,
+                data: {
+                    action: "exit",
+                    entry_price: previousOrder.current_price,
+                    exit_price: currentPrice,
+                    realized_pnl: "LIQUIDATION",
+                    leverage: previousOrder?.leverage || 1,
+                    execution_time: executionTimeInSeconds,
+                },
+            });
+            return { success: false, message: "Active position already exists" };
+        }
         // Place the order
         const result = await bybitTradesServices.placeTrade({
             category: data.category,
@@ -228,7 +281,7 @@ const processOrder = async (data) => {
 
         await telegramChatsServices.sendMessage({
             message: {
-                title: `✅ Order Placed: Successfully placed a new order.`,
+                title: `✅ ${data.environment} Order Placed: Successfully placed a new order.`,
                 symbol: data.symbol,
                 side: data.side,
                 category: data.category,
@@ -238,6 +291,20 @@ const processOrder = async (data) => {
                 executionTime: executionTimeInSeconds,
             },
         });
+
+        await Query.update({
+            table: "orders",
+            id: data.orderId,
+            data: {
+                action: "entry",
+                leverage: data.leverage,
+                quantity: orderQty,
+                current_price: currentPrice,
+                environment: data.environment,
+                execution_time: executionTimeInSeconds,
+            },
+        });
+
         console.info("Order placed successfully:", result);
 
         return result;
@@ -263,9 +330,25 @@ const processOrder = async (data) => {
     }
 };
 
-export const getOrders = async ({ openOnly = true, symbol = "SOLUSDT" }) => {
+const checkForLiquidation = async ({ symbol, side }) => {
+    const lastestOrderRef = await Query.find({
+        table: "orders",
+        criteria: { symbol },
+        orderBy: "created_at DESC",
+        limit: 1,
+    });
+
+    const lastestOrder = lastestOrderRef.rows[0];
+
+    if (lastestOrder.action === "entry") return true;
+
+    return false;
+};
+// checkForLiquidation({ symbol: "SOLUSDT" });
+
+export const getOrders = async ({ openOnly = true, sandbox = false, symbol = "SOLUSDT" }) => {
     try {
-        const orders = await bybitTradesServices.getOpenClosedOrders({ openOnly, symbol, sandbox: true });
+        const orders = await bybitTradesServices.getOpenClosedOrders({ openOnly, symbol, sandbox });
 
         return orders;
     } catch (err) {

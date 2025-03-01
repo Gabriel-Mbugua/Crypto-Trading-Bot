@@ -40,7 +40,7 @@ const markDownFormatter = (message) => {
     if (message.closingSide) formattedMessage += `*Closed Side*: \`${escapeMarkdownV2(message.closingSide)}\`\n`;
     if (message.orderType) formattedMessage += `*Order Type*: \`${escapeMarkdownV2(message.orderType)}\`\n`;
     if (message.qty) formattedMessage += `*Quantity*: \`${escapeMarkdownV2(message.qty)}\`\n`;
-    if (message.error) formattedMessage += `*Error*: \`${escapeMarkdownV2(message.error.message)}\`\n`;
+    if (message.error) formattedMessage += `*Error*: \`${escapeMarkdownV2(message.error)}\`\n`;
     if (message.rejectReason) formattedMessage += `*Reject Reason*: \`${escapeMarkdownV2(message.rejectReason)}\`\n`;
     if (message.currentPrice) formattedMessage += `*Current Price*: \`${escapeMarkdownV2(message.currentPrice)}\`\n`;
     if (message.avgEntryPrice) formattedMessage += `*Entry Price*: \`${escapeMarkdownV2(message.avgEntryPrice)}\`\n`;

@@ -8,6 +8,7 @@ import axios from "axios";
 import { redisConnection } from "./src/redis/index.js";
 import { telegramChatsServices } from "./src/telegram/index.js";
 import { loggerMiddleware } from "./src/middleware/index.js";
+import { closeDb, initializeDb } from "./src/database/index.js";
 
 const port = config.port;
 
@@ -42,6 +43,7 @@ app.get("/health", (req, res) => {
 
 const startServer = async () => {
     try {
+        await initializeDb();
         await redisConnection.createRedisClient();
 
         app.listen(port, "0.0.0.0", () => {
@@ -55,6 +57,9 @@ const startServer = async () => {
                 error: error.message,
             },
         });
+
+        await closeDb();
+
         process.exit(1);
     }
 };

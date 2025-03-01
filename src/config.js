@@ -18,6 +18,14 @@ export const config = {
         testnetTradeWebsocketUrl: "wss://stream-testnet.bybit.com/v5/trade",
         testnetPrivateWebsocketUrl: "wss://stream-testnet.bybit.com/v5/private",
     },
+    database: {
+        connectionString: process.env.DATABASE_URL,
+        user: process.env.DATABASE_USER,
+        password: process.env.DATABASE_PASSWORD,
+        host: process.env.DATABASE_HOST,
+        port: process.env.DATABASE_PORT,
+        name: process.env.DATABASE_NAME,
+    },
     nodeEnv: process.env.NODE_ENV || "development",
     port: process.env.PORT || 3000,
     redisConfig: {
