@@ -21,7 +21,7 @@ export const receiveOrder = async (data) => {
 
         if (!setLock) return { success: true, message: "Order is already being processed" };
 
-        const sandbox = config.nodeEnv === "development";
+        const sandbox = config.nodeEnv !== "production";
 
         data.symbol = data.symbol.replace(".P", "");
         data.sandbox = sandbox;
@@ -101,11 +101,12 @@ export const receiveOrder = async (data) => {
 //     sandbox: true,
 // }).then((res) => console.log(res));
 
-const processOrder = async (data) => {
+export const processOrder = async (data) => {
     try {
         const startTime = Date.now();
-        const executionTmeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
         const sandbox = data.sandbox;
+
+        if (data?.testing) return { success: true, message: "Order received successfully" };
 
         const [positionsRef, pendingOrders, balanceInfo, ticker, ordersRef] = await Promise.all([
             bybitPositionServices.getPositions({
