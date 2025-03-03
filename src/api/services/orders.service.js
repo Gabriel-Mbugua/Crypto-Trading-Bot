@@ -124,7 +124,7 @@ export const processOrder = async (data) => {
             }),
             Query.find({
                 table: "orders",
-                criteria: { symbol: data.symbol },
+                criteria: { symbol: data.symbol, environment: data.environment },
                 orderBy: "created_at DESC",
                 limit: 2,
             }),
@@ -245,11 +245,22 @@ export const processOrder = async (data) => {
             orderQty = Math.min(parseFloat(data.qty), maxPositionSize);
         }
 
-        if (previousOrder?.action === "entry" && positions.length < 1) {
+        if (previousOrder?.action === "entry") {
             console.info("An active position was closed. Skip this false entry signal.");
+            const executionTimeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
+
             await telegramChatsServices.sendMessage({
                 message: {
-                    title: `🚫Ignored Order.: Active position was closed.`,
+                    title: `🚫Ignored Order: Active position was closed.`,
+                    symbol: data.symbol,
+                    side: data.side,
+                    category: data.category,
+                    orderType: data.orderType,
+                    qty: data.qty,
+                    entryPrice: previousOrder.current_price,
+                    exitPrice: currentPrice,
+                    realizedPnl: "LIQUIDATION",
+                    executionTime: executionTimeInSeconds,
                 },
             });
 
@@ -260,7 +271,7 @@ export const processOrder = async (data) => {
                     action: "exit",
                     entry_price: previousOrder.current_price,
                     exit_price: currentPrice,
-                    realized_pnl: "LIQUIDATION",
+                    realized_pnl: 0,
                     leverage: previousOrder?.leverage || 1,
                     execution_time: executionTimeInSeconds,
                 },
