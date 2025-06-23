@@ -361,8 +361,13 @@ const checkForLiquidation = async ({ symbol, side }) => {
 export const getOrders = async ({ openOnly = true, sandbox = false, symbol = "SOLUSDT" }) => {
     try {
         const orders = await bybitTradesServices.getOpenClosedOrders({ openOnly, symbol, sandbox });
+        // const orders = await Query.find({
+        //     table: "orders",
+        //     criteria: { symbol, environment: sandbox ? "Sandbox" : "Production" },
+        //     orderBy: "created_at DESC",
+        // });
 
-        return orders;
+        return orders.rows;
     } catch (err) {
         console.error(err?.response?.data || err.message);
         throw new Error(err.message);
