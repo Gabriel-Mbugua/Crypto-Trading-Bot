@@ -1,4 +1,4 @@
+import { controllerUtils } from "../../utils/index.js";
 import { positionsService } from "../services/index.js";
-import { createControllerWrapper } from "./common.js";
 
-export const getPositions = createControllerWrapper(positionsService.getPositions, "POSITIONS.C-1");
+export const getPositions = controllerUtils.createControllerWrapper(positionsService.getPositions, "POSITIONS.C-1");

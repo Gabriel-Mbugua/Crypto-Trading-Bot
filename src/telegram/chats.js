@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { getConfigDetails } from "./common.js";
+import { getConfigDetails, handleError } from "./common.js";
 import { config } from "../config.js";
 
 export const sendMessage = async ({ message, formatStyle = "MarkdownV2" }) => {
@@ -27,7 +27,7 @@ export const sendMessage = async ({ message, formatStyle = "MarkdownV2" }) => {
         return response.data;
     } catch (err) {
         console.error(`E-TG-28`, JSON.stringify(message), err?.response?.data || err.message);
-        throw new Error(err.message);
+        return handleError(err)
     }
 };
 

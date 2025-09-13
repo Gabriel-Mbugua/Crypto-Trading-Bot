@@ -1,5 +1,5 @@
+import { controllerUtils } from "../../utils/index.js";
 import { ordersService } from "../services/index.js";
-import { createControllerWrapper } from "./common.js";
 
-export const processOrder = createControllerWrapper(ordersService.receiveOrder, "ORDERS.C-1");
-export const getOrders = createControllerWrapper(ordersService.getOrders, "ORDERS.C-2");
+export const processOrder = controllerUtils.createControllerWrapper(ordersService.receiveOrder, "ORDERS.C-1");
+export const getOrders = controllerUtils.createControllerWrapper(ordersService.getOrders, "ORDERS.C-2");

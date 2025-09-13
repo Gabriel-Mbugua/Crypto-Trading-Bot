@@ -26,7 +26,7 @@ export const config = {
         port: process.env.DATABASE_PORT,
         name: process.env.DATABASE_NAME,
     },
-    nodeEnv: process.env.NODE_ENV || "development",
+    nodeEnv: process.env.NODE_ENV || "production",
     port: process.env.PORT || 3000,
     redisConfig: {
         defaultExpirationInSeconds: 10,
